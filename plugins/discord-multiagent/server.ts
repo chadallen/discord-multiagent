@@ -343,6 +343,26 @@ const botTurnsSinceHuman = new Map<string, number>()
 // multiagent: names for allowBots IDs, so a person can say "ask Agent B".
 const botNames = new Map<string, string>()
 const seenRoleBots = new Set<string>()
+const seededChannels = new Set<string>()
+
+// Without the Server Members intent we can't list a role's members, but one
+// member lookup by ID is allowed. So scan recent history once per channel for
+// bot authors and keep those that hold an allowed role.
+async function seedRoleBots(msg: Message, channelKey: string, roles: string[]): Promise<void> {
+  if (seededChannels.has(channelKey) || !msg.guild) return
+  seededChannels.add(channelKey)
+  try {
+    const recent = await msg.channel.messages.fetch({ limit: 50 })
+    const botIds = new Set([...recent.values()].filter(m => m.author.bot).map(m => m.author.id))
+    for (const id of botIds) {
+      if (id === client.user?.id) continue
+      const member = await msg.guild.members.fetch(id).catch(() => null)
+      if (member && roles.some(r => member.roles.cache.has(r))) seenRoleBots.add(id)
+    }
+  } catch (err) {
+    process.stderr.write(`discord channel: could not scan history for agents: ${err}\n`)
+  }
+}
 
 async function agentRoster(botIds: string[]): Promise<string> {
   const parts: string[] = []
@@ -964,6 +984,7 @@ async function handleInbound(msg: Message): Promise<void> {
 
   const groupKey = msg.channel.isThread() ? msg.channel.parentId ?? msg.channelId : msg.channelId
   const group = access.groups[groupKey]
+  if (group?.allowBotRoles?.length) await seedRoleBots(msg, groupKey, group.allowBotRoles)
   const allowBots = [...new Set([...(group?.allowBots ?? []), ...seenRoleBots])]
     .filter(id => id !== client.user?.id)
   const roster = allowBots.length > 0 ? await agentRoster(allowBots) : ''
