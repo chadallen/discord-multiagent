@@ -58,8 +58,6 @@ Run these and fix what's missing:
 - `claude --version` must be 2.1.80 or later.
 - `bun --version`. If missing, offer `brew install oven-sh/bun/bun` on macOS,
   or point to https://bun.sh.
-- `gh auth status`. The plugin repository is private, so git needs GitHub
-  credentials. If not signed in, the person runs `gh auth login`.
 - The person's Claude Code must be signed in to a claude.ai account. Channels
   don't run on Bedrock, Vertex or Foundry.
 - The scripts need `bash` and `python3`, both standard on macOS and Linux.
