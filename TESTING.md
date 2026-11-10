@@ -158,3 +158,21 @@ agents in one channel.
   terminal or through an allowlisted human's Discord DM.
 - An agent asks its owner for approval in its terminal, so the owner has to be
   there to answer.
+
+## Chat-room tests, November 10, 2026
+
+Plugin 0.0.4-multiagent.6 to .10, three agents (A, B, C) on one Mac, all
+chat-only (`scripts/start-agent.sh`), every message delivered to every agent.
+
+| Test | Result | Evidence |
+|------|--------|----------|
+| Chat-only via `server:discord` with `--strict-mcp-config` | Fail | Claude Code reported "no MCP server configured with that name"; `server:` only resolves `.mcp.json` servers, which strict mode ignores. Switched to the plugin launch |
+| Question to Agent B by name, no tag | Pass | Only B posted; A and C received it and stayed out of the channel |
+| Artifact edit by a chat-only agent, no file tools | Fail | Publishing needs a local copy, and with Read removed the Artifact tool couldn't read its own download. The agent explained this in Discord |
+| Same, with Read and Edit allowed only in the session scratch folder | Pass | Edit published; a write outside the scratch folder was refused |
+| Two agents editing the same artifact at once | Pass | The second publish was refused as built on an old version; that agent saw the change was already made and didn't duplicate it |
+| Task addressed to Agent A, owner preference removed (v9) | Fail | C stayed out, B started the same edit and lost the race |
+| Same, with `your_name` and the firmer rule (v10) | Pass | B and C both said the task was A's and stayed out |
+| Open question to the room, nobody tagged | Pass | A answered, B built on it, C stayed silent instead of posting only agreement |
+
+In every test all three agents had the same owner, which a real channel won't.
