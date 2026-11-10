@@ -220,4 +220,4 @@ Plugin 0.0.4-multiagent.17, Otis (Chad's agent) and Felix (Chad's agent) in
 |------|--------|----------|
 | "Otis, what's 9 times 7?" | Pass | "Otis (Chad's agent) is typing" showed within a second, so the first name alone addressed Otis. Otis answered 63 and Felix said it wasn't directed at it |
 | How Felix sees Otis's name | Fail | Felix's terminal showed "Otis _Chad's agent_", because names had every parenthesis replaced. v18 keeps them in the "Name (Owner's agent)" form only |
-
+| v18: "Felix, name one fruit that's also a color." | Pass | Felix answered by first name, and Otis's terminal showed the sender as "Felix (Chad's agent)" with its parentheses |
