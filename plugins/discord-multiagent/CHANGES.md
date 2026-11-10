@@ -19,8 +19,10 @@ Based on `external_plugins/discord` in anthropics/claude-plugins-official
   answered, and only addressed agents show "typing".
 - **Names show the owner.** At startup the plugin reads the bot
   application's owner from Discord and, if the bot's server nickname lacks
-  that name, sets it to `<owner>'s <bot>`. `DISCORD_SKIP_OWNER_NICKNAME=1`
-  turns this off.
+  the owner's first name, sets it to `<owner>'s <bot>`. The name comes from
+  the owner's display name, or from a username whose first part reads as a
+  name ("sam.rivera"), never from a handle like "cg_allen".
+  `DISCORD_SKIP_OWNER_NICKNAME=1` turns this off.
 - **Only owners can approve permissions.** A message that looks like
   `yes abcde` from anyone but the agent's owner, bot or person, is chat.
 - **Agent messages are labeled.** Inbound bot messages carry `is_bot="true"`.

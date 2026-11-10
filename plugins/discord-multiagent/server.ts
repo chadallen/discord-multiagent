@@ -1195,19 +1195,18 @@ async function nameAfterOwner(): Promise<void> {
   const app = await client.application?.fetch()
   const owner = app?.owner
   // A team-owned app has no single person, so use the team owner's name.
-  let ownerName: string | null = null
-  if (owner instanceof User) {
-    ownerName = owner.globalName ?? owner.username
-  } else if (owner instanceof Team) {
-    const lead = owner.owner?.user
-    ownerName = lead ? (lead.globalName ?? lead.username) : owner.name
-  }
-  if (!ownerName) return
-  // "sam.rivera" becomes "sam", so a bot already called "Sam's
-  // Claude" is left alone. Very short first parts ("cg") keep the full name.
-  const first = ownerName.split(/[\s._-]+/)[0] ?? ownerName
-  const ownerTag = first.length >= 3 ? first : ownerName
+  let ownerTag: string | null = null
+  if (owner instanceof User) ownerTag = firstName(owner)
+  else if (owner instanceof Team) ownerTag = owner.owner?.user ? firstName(owner.owner.user) : owner.name
   const botName = client.user.globalName ?? client.user.username
+  const tagWord = ownerTag
+    ? new RegExp(`(^|\\W)${ownerTag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\W|$)`, 'i')
+    : null
+  // With no usable name, or one the bot's name already has, the bot needs no
+  // nickname. Still clear one this function set earlier, which ends in
+  // "'s <bot name>", so a wrong guess doesn't stick.
+  const nameIsFine = !tagWord || tagWord.test(botName)
+  if (!ownerTag) process.stderr.write('discord channel: owner has no display name to put in the nickname\n')
   const access = loadAccess()
   const guildIds = new Set<string>()
   for (const channelId of Object.keys(access.groups)) {
@@ -1218,12 +1217,28 @@ async function nameAfterOwner(): Promise<void> {
     const guild = await client.guilds.fetch(guildId).catch(() => null)
     const me = guild?.members.me ?? await guild?.members.fetchMe().catch(() => null)
     if (!me) continue
-    const tagWord = new RegExp(`(^|\\W)${ownerTag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\W|$)`, 'i')
-    if (tagWord.test(me.displayName)) continue
-    const nick = `${ownerTag}'s ${botName}`.slice(0, 32)
+    const setByUs = me.nickname?.endsWith(`'s ${botName}`) === true
+    let nick: string | null
+    if (nameIsFine) {
+      if (!setByUs) continue
+      nick = null
+    } else {
+      if (tagWord!.test(me.displayName)) continue
+      nick = `${ownerTag}'s ${botName}`.slice(0, 32)
+    }
     await me.setNickname(nick).catch(err =>
       process.stderr.write(`discord channel: could not set nickname in ${guildId} (needs Change Nickname): ${err}\n`))
   }
+}
+
+// A display name is one the person chose, so its first word is their name.
+// A username is a handle: "sam.rivera" gives "Sam", but "cg_allen"
+// gives nothing, because "cg" doesn't read as a name.
+function firstName(user: User): string | null {
+  const display = user.globalName?.trim().split(/\s+/)[0]
+  if (display && display.length >= 2) return display
+  const part = user.username.split(/[._\-\d]+/)[0] ?? ''
+  return /^[a-z]{3,}$/i.test(part) ? part[0]!.toUpperCase() + part.slice(1) : null
 }
 
 client.login(TOKEN).catch(err => {

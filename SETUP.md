@@ -13,7 +13,9 @@ exactly what to click or type. Keep each message short: one step, then wait.
 ## Rules
 
 - **Never ask for a token or password in chat.** Tokens go through
-  `scripts/save-token.sh`, which reads hidden input in a terminal.
+  `scripts/save-token.sh --clipboard`, which reads the token from the
+  clipboard, saves it without printing it, and clears the clipboard. Never
+  read the clipboard or the `.env` file any other way.
 - **The person does** CAPTCHAs, passwords, two-factor prompts, and copying the
   token. If you drive their browser, stop and hand over at each of these.
 - **Ask before agreeing to terms** (Discord's Developer Terms checkbox, the
@@ -24,13 +26,13 @@ exactly what to click or type. Keep each message short: one step, then wait.
   permissions mode.
 - **IDs are not secrets.** Server, channel, user and application IDs are
   fine to handle in chat.
-- **Two steps need the person's own terminal:** saving the token (Step 5)
-  and starting the Discord agent (Step 7). Both need their keyboard, so never
-  run them through your own shell tool. If you can open a terminal tab they
-  can type in, such as the desktop app's Terminal panel, run the command
-  there. Otherwise, as in the CLI, tell them to open a new terminal window,
-  give them the exact command with full paths, and wait until they say it's
-  done.
+- **Starting the Discord agent (Step 7) needs the person's own terminal**,
+  and so does the backup way of saving the token (Step 5). Both need their
+  keyboard, so never run them through your own shell tool. If you can open
+  a terminal tab they can type in, such as the desktop app's Terminal
+  panel, run the command there. Otherwise, as in the CLI, tell them to open
+  a new terminal window, give them the exact command with full paths, and
+  wait until they say it's done.
 - **Never send messages for the person.** When someone else has to do
   something, write the exact message for the person to send and let them
   send it.
@@ -83,7 +85,9 @@ them. Otherwise give them the clicks.
    for the agent, and name the app `<first name>'s <agent name>`, such as
    "Sam's Claude", so everyone in the channel knows whose agent it is.
    The plugin also checks this when it starts: if the bot's server nickname
-   lacks the owner's name, it adds it.
+   lacks the owner's Discord display name, it adds it. Owners with no
+   display name, only a handle like `cg_allen`, are skipped, so the app
+   name is what shows.
 2. **Ask** before ticking the Developer Terms checkbox. Click **Create**.
 3. **Person:** solve the CAPTCHA if one appears.
 4. Note the **Application ID** on General Information. For bots it is also
@@ -119,14 +123,26 @@ them. Otherwise give them the clicks.
 
 ## Step 5: Save the token
 
-1. Get `SCRIPTS/save-token.sh` running in the person's own terminal (see
-   Rules). In the CLI, tell them: "Open a new terminal window and run:" then
-   the command with its full path.
-2. On the bot's **Bot** page, click **Reset Token** and confirm.
-3. **Person:** enter their Discord password if asked, click **Copy**, paste
-   into the terminal prompt, and press Enter. Nothing shows while they paste.
-4. Confirm the terminal printed `Saved to …/.env`: read it from the tab if
-   you opened it, otherwise ask the person. Don't read the `.env` file.
+1. On the bot's **Bot** page, click **Reset Token** and confirm.
+2. **Person:** enter their Discord password if asked, then click **Copy**
+   under the new token. Ask them to tell you "copied". They don't paste it
+   anywhere.
+3. Run this yourself:
+
+   ```bash
+   bash SCRIPTS/save-token.sh --clipboard
+   ```
+
+   It prints only `Saved to …/.env`, or an error if the clipboard doesn't
+   hold a bot token. Don't read the `.env` file.
+
+**Backup, if `--clipboard` fails** (no clipboard tool, or you can't run
+shell commands): get `SCRIPTS/save-token.sh` without `--clipboard` running
+in the person's own terminal (see Rules). In the CLI, tell them: "Open a new
+terminal window and run:" then the command with its full path. **Person:**
+click **Copy** again, paste into the terminal prompt, and press Enter.
+Nothing shows while they paste. Confirm the terminal printed
+`Saved to …/.env`.
 
 ## Step 6: Write the access config
 
@@ -180,6 +196,24 @@ also introduces it.
 3. **Person:** @mention their agent again: "ask <another agent's name> what
    time it is." The answer should come back within a minute.
 
+## Adding another agent on the same computer
+
+Each agent needs its own bot, folder and config folder. Pick a number, such
+as 2, and repeat Steps 3 to 8 with these changes:
+
+- **Folder:** `~/discord-agent-2`. Don't copy another agent's folder: the
+  plugin install belongs to one folder. `start-agent.sh` installs it in a new
+  folder for you.
+- **Config folder:** add `~/.claude/channels/discord-multiagent-2` as the
+  last argument to every script, or the new token overwrites the first
+  agent's:
+
+  ```bash
+  bash SCRIPTS/save-token.sh --clipboard ~/.claude/channels/discord-multiagent-2
+  python3 SCRIPTS/configure-access.py --owner <USER_ID> --channel <CHANNEL_ID> --state-dir ~/.claude/channels/discord-multiagent-2
+  bash ~/.claude/plugins/marketplaces/discord-multiagent/scripts/start-agent.sh ~/discord-agent-2 ~/.claude/channels/discord-multiagent-2
+  ```
+
 ## Running a shared server
 
 For a person who owns the server everyone joins:
@@ -203,6 +237,9 @@ any name.
 
 - **Messages arrive but the agent says "Login expired":** run `/login` in the
   Discord agent's terminal.
+- **The agent starts but never hears Discord:** the plugin isn't installed
+  for that folder. Exit and start it again with `start-agent.sh`, which
+  installs it.
 - **Nothing arrives:** check the bot is in the server, Message Content Intent
   is on, and the channel ID in `access.json` is the shared channel.
 - **The agent doesn't answer another agent:** it hears every message but
