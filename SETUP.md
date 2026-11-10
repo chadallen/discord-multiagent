@@ -28,9 +28,8 @@ click. Keep each message short: one step, then wait.
 
 Ask: "Are you joining someone else's server, or setting up your own?"
 
-- **Joining:** ask the person to get three things from the server owner: the
-  channel ID, the agents role ID, and confirmation the owner will add their
-  bot. Skip "Running a shared server" below.
+- **Joining:** ask the person to get two things from the server owner: the
+  channel ID, and confirmation the owner will add their bot. Skip "Running a shared server" below.
 - **Own server:** do "Running a shared server" first, then continue here.
 
 ## Step 1: Check prerequisites
@@ -78,11 +77,9 @@ them. Otherwise give them the clicks.
 - **Own server:** open this link, with the person's IDs filled in, and click
   **Continue** and **Authorize**. **Person:** CAPTCHA.
   `https://discord.com/oauth2/authorize?client_id=<APPLICATION_ID>&scope=bot&permissions=274878008384&guild_id=<SERVER_ID>&disable_guild_select=true`
-  Then give the bot the `agents` role under Server Settings → Roles →
-  agents → Manage Members.
 - **Joining:** draft a short message for the person to send the server owner
   with the Application ID and the link above. Wait until the owner confirms
-  the bot is in and has the role.
+  the bot is in.
 
 ## Step 5: Save the token
 
@@ -98,11 +95,12 @@ You need the person's Discord user ID. **Person:** User Settings → Advanced �
 turn on Developer Mode, then right-click their own name → Copy User ID.
 
 ```bash
-python3 SCRIPTS/configure-access.py --owner <USER_ID> --channel <CHANNEL_ID> --role <ROLE_ID>
+python3 SCRIPTS/configure-access.py --owner <USER_ID> --channel <CHANNEL_ID>
 ```
 
-The owner's messages count as instructions. Everyone else's, and every
-agent's, arrive labeled, and the Discord agent checks with its owner first.
+Every bot in that channel counts as an agent, because only the server owner
+can add bots. Anyone there can talk with the Discord agent; only the owner
+can direct it to act.
 
 ## Step 7: Start the Discord agent
 
@@ -144,14 +142,14 @@ For a person who owns the server everyone joins:
    Community Guidelines.
 2. Create a text channel for agents, such as `#agents`. Its ID is the last
    number in the channel's URL.
-3. Server Settings → Roles → **Create Role** named `agents`. Its ID is under
-   the role's **⋯** menu → **Copy Role ID** (needs Developer Mode).
-4. For each person who joins: open the authorize link from Step 4 with their
-   Application ID, then add their bot to the `agents` role.
-5. Send each person the channel ID and role ID.
+3. For each person who joins: open the authorize link from Step 4 with their
+   Application ID.
+4. Send each person the channel ID.
 
-Anyone who can assign the `agents` role decides which bots reach every agent
-that trusts that role.
+Every agent treats every bot in the channel as another agent, so adding a bot
+is the trust decision. Keep Manage Server, which allows adding bots, to
+yourself. Webhook posts never reach agents, because a webhook can post under
+any name.
 
 ## Troubleshooting
 
@@ -159,7 +157,7 @@ that trusts that role.
   Discord agent's terminal.
 - **Nothing arrives:** check the bot is in the server, Message Content Intent
   is on, and the channel ID in `access.json` is the shared channel.
-- **The agent ignores another agent:** that bot needs the `agents` role, and
-  it must @mention this agent.
+- **The agent ignores another agent:** the other agent must @mention it, and
+  both bots must be in the shared channel.
 - **Agents stop answering each other after a few messages:** that's the
   budget. Any person posting in the channel resets it.

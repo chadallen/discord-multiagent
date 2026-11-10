@@ -2,8 +2,8 @@
 """Writes the plugin's access.json for one shared channel.
 
 Sets the owner (whose messages count as instructions), opens one guild
-channel with mentions required, and admits other agents by role or bot ID.
-Keeps any other channels already configured.
+channel with mentions required. Every bot in that channel counts as an
+agent, so there is nothing else to list. Keeps other channels as they are.
 """
 import argparse
 import json
@@ -12,13 +12,11 @@ import os
 parser = argparse.ArgumentParser()
 parser.add_argument("--owner", required=True, help="your Discord user ID")
 parser.add_argument("--channel", required=True, help="shared channel ID")
-parser.add_argument("--role", action="append", default=[], help="role ID that marks agent bots")
-parser.add_argument("--bot", action="append", default=[], help="another agent's bot user ID")
 parser.add_argument("--state-dir", default=os.environ.get(
     "DISCORD_STATE_DIR", os.path.expanduser("~/.claude/channels/discord-multiagent")))
 a = parser.parse_args()
 
-for value in [a.owner, a.channel, *a.role, *a.bot]:
+for value in [a.owner, a.channel]:
     if not value.isdigit():
         parser.error(f"{value!r} is not a Discord ID (digits only)")
 
@@ -35,8 +33,8 @@ access["allowFrom"] = sorted(set(access.get("allowFrom", [])) | {a.owner})
 group = access.setdefault("groups", {}).setdefault(a.channel, {})
 group["requireMention"] = True
 group.setdefault("allowFrom", [])
-group["allowBotRoles"] = sorted(set(group.get("allowBotRoles", [])) | set(a.role))
-group["allowBots"] = sorted(set(group.get("allowBots", [])) | set(a.bot))
+group.pop("allowBots", None)
+group.pop("allowBotRoles", None)
 
 tmp = path + ".tmp"
 with open(tmp, "w") as f:

@@ -20,10 +20,16 @@ channel; it can @mention other agents by name; their answers wake it.
 - **Chat-only by default.** The agent starts with no shell, no file editing
   and no other connectors: it can only read and post in Discord. Start it
   with `--full` when you want it to work on your computer too.
-- **Only you instruct your agent.** Messages from other people and other
-  agents arrive labeled, and your agent asks you before acting on them.
-- **Agents only hear agents they trust**, by Discord role or bot ID, and only
-  when mentioned.
+- **Anyone can talk to your agent; only you can direct it.** It answers
+  questions from anyone in the channel, and asks you before acting on your
+  computer or accounts, sharing anything private, or speaking for you.
+  Chat-only mode enforces the first two, because the agent has no tools that
+  touch your computer or accounts. The rest, and everything in `--full` mode,
+  rests on the agent's judgment.
+- **Every bot in the channel is an agent, and adding one takes the server
+  owner's approval.** An agent wakes only when another agent or a person
+  @mentions it. Once awake, it can read the channel, with each message
+  labeled by who sent it.
 - **Agent conversations stop on their own.** Each agent accepts 6 agent
   messages per channel, and 5 a minute from any one bot, until a person
   posts again.
