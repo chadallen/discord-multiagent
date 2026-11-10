@@ -67,6 +67,11 @@ Run these and fix what's missing:
 
 Project scope keeps the plugin out of the person's other sessions.
 
+First check whether this computer already runs an agent: if
+`~/discord-agent` or `~/.claude/channels/discord-multiagent/` exists, don't
+touch either. Follow "Adding another agent on the same computer" below
+instead, which gives the new agent its own folder and config folder.
+
 ```bash
 mkdir -p ~/discord-agent && cd ~/discord-agent
 claude plugin marketplace add chadallen/discord-multiagent
@@ -144,7 +149,9 @@ them. Otherwise give them the clicks.
    ```
 
    It prints only `Saved to …/.env`, or an error if the clipboard doesn't
-   hold a bot token. Don't read the `.env` file.
+   hold a bot token. Don't read the `.env` file. If it says the folder
+   already has a token, stop: that folder may belong to another agent. Add
+   `--replace` only when you are replacing this same agent's token.
 
 **Backup, if `--clipboard` fails** (no clipboard tool, or you can't run
 shell commands): get `SCRIPTS/save-token.sh` without `--clipboard` running
@@ -208,8 +215,11 @@ also introduces it.
 
 ## Adding another agent on the same computer
 
-Each agent needs its own bot, folder and config folder. Pick a number, such
-as 2, and repeat Steps 3 to 8 with these changes:
+Each agent needs its own bot, folder and config folder. Pick the lowest
+number N, starting at 2, for which neither `~/discord-agent-N` nor
+`~/.claude/channels/discord-multiagent-N` exists. The examples below use 2.
+Run Step 2's commands with that folder, then repeat Steps 3 to 8 with these
+changes:
 
 - **Folder:** `~/discord-agent-2`. Don't copy another agent's folder: the
   plugin install belongs to one folder. `start-agent.sh` installs it in a new

@@ -3,13 +3,29 @@
 # never appears on screen, in shell history or in an agent's chat.
 # --clipboard reads the token from the clipboard and then clears it, so a
 # setup agent can run this itself after the person clicks Copy. Without it,
-# the script reads hidden input typed in a terminal.
-# Usage: save-token.sh [--clipboard] [state-dir]
+# the script reads hidden input typed in a terminal. It won't overwrite a
+# saved token unless given --replace, because the wrong config folder would
+# silently cut another agent off from Discord.
+# Usage: save-token.sh [--clipboard] [--replace] [state-dir]
 #   (default state dir ~/.claude/channels/discord-multiagent)
 set -euo pipefail
 from_clipboard=0
-if [[ ${1:-} == --clipboard ]]; then from_clipboard=1; shift; fi
+replace=0
+while [[ ${1:-} == --* ]]; do
+  case $1 in
+    --clipboard) from_clipboard=1 ;;
+    --replace) replace=1 ;;
+    *) echo "Unknown option $1"; exit 1 ;;
+  esac
+  shift
+done
 dir=${1:-${DISCORD_STATE_DIR:-$HOME/.claude/channels/discord-multiagent}}
+
+if [[ -e $dir/.env && $replace == 0 ]]; then
+  echo "$dir already has a bot token, which may belong to another agent. Nothing saved."
+  echo "To give a new agent its own config folder, pass a different folder. To replace this token, add --replace."
+  exit 1
+fi
 
 read_clipboard() {
   if command -v pbpaste >/dev/null; then pbpaste
