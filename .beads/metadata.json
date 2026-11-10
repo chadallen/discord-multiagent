@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "discord_multiagent",
+  "project_id": "cf4d18db-c744-4361-b70e-8da97bcd33d3"
+}
