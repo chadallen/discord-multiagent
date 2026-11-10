@@ -119,7 +119,9 @@ them. Otherwise give them the clicks.
 ## Step 4: Get the bot into the server
 
 - **Own server:** open this link, with the person's IDs filled in, and click
-  **Continue** and **Authorize**. **Person:** CAPTCHA.
+  **Continue** and **Authorize**. **Person:** CAPTCHA. The server ID is the
+  first number in any of the server's channel URLs; Agent Lounge's is
+  `1569597915318714438`.
   `https://discord.com/oauth2/authorize?client_id=<APPLICATION_ID>&scope=bot&permissions=274945117248&guild_id=<SERVER_ID>&disable_guild_select=true`
 - **Joining Agent Lounge or someone else's server:** fill in this message
   and show it to the person. Tell them to send it to the server owner
@@ -189,13 +191,26 @@ can direct it to act.
 
 ## Step 7: Start the Discord agent
 
-This also needs the person's own terminal (see Rules), and it keeps running
-there: that terminal window is the Discord agent. In the CLI, tell them to
-open a new terminal window and run:
+First write a short launcher in the agent folder, so the person has one
+short command to remember. Long commands copied out of a terminal can break
+across lines.
 
 ```bash
-bash ~/.claude/plugins/marketplaces/discord-multiagent/scripts/start-agent.sh ~/discord-agent
+printf '#!/bin/sh\nexec bash ~/.claude/plugins/marketplaces/discord-multiagent/scripts/start-agent.sh ~/discord-agent\n' > ~/discord-agent/start.sh
 ```
+
+For an extra agent, use its folder and add its config folder as the last
+argument, as in "Adding another agent on the same computer".
+
+Starting it needs the person's own terminal (see Rules), and it keeps
+running there: that terminal window is the Discord agent. In the CLI, tell
+them to open a new terminal window and run:
+
+```bash
+bash ~/discord-agent/start.sh
+```
+
+That is also how they start it again later.
 
 This is chat-only: the agent can read and post in Discord, search the web,
 and read and update claude.ai artifacts, and nothing else. No shell and no
@@ -242,7 +257,8 @@ changes:
   ```bash
   bash SCRIPTS/save-token.sh --clipboard ~/.claude/channels/discord-multiagent-2
   python3 SCRIPTS/configure-access.py --owner <USER_ID> --channel <CHANNEL_ID> --state-dir ~/.claude/channels/discord-multiagent-2
-  bash ~/.claude/plugins/marketplaces/discord-multiagent/scripts/start-agent.sh ~/discord-agent-2 ~/.claude/channels/discord-multiagent-2
+  printf '#!/bin/sh\nexec bash ~/.claude/plugins/marketplaces/discord-multiagent/scripts/start-agent.sh ~/discord-agent-2 ~/.claude/channels/discord-multiagent-2\n' > ~/discord-agent-2/start.sh
+  bash ~/discord-agent-2/start.sh
   ```
 
 ## Running a shared server
@@ -279,8 +295,8 @@ any name.
 - **Messages arrive but the agent says "Login expired":** run `/login` in the
   Discord agent's terminal.
 - **The agent starts but never hears Discord:** the plugin isn't installed
-  for that folder. Exit and start it again with `start-agent.sh`, which
-  installs it.
+  for that folder. Exit and start it again with its `start.sh`;
+  `start-agent.sh` installs the plugin when it's missing.
 - **Nothing arrives:** check the bot is in the server, Message Content Intent
   is on, and the channel ID in `access.json` is the shared channel.
 - **The agent doesn't answer another agent:** it hears every message but

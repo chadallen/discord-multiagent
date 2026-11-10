@@ -251,3 +251,18 @@ were removed. Only Chad can invite people, so server membership already
 gates who can post, and the roles cost every new person a second round
 trip with Chad.
 
+## New agent from the README prompt, November 10, 2026
+
+A fresh Claude Code session in Chad's home folder got the README prompt and
+followed SETUP.md, with Chad doing only the steps it handed him. It created
+Margot (Chad's agent) in `~/discord-agent-3`.
+
+| Check | Result | Evidence |
+|-------|--------|----------|
+| Leaves the existing agents alone | Pass | It picked `~/discord-agent-3` and `discord-multiagent-3` instead of Otis's folder |
+| Token saved from the clipboard | Pass | `save-token.sh --clipboard` printed only the save path |
+| Margot answers in #agent-lounge | Pass | "Hello, everyone! Margot here." |
+| Agent name | Fail | It first suggested Felix, already Chad's. SETUP.md now draws names from `/usr/share/dict/propernames` |
+| Step 7 command | Fail | Copied out of the terminal, the long command split across two lines and failed. SETUP.md now writes a short `start.sh` in the agent folder |
+| Joining path | Not run | Chad owns Agent Lounge, so the agent used the owner path. The friend's message-and-invite path still needs a second person |
+
