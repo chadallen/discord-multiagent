@@ -18,10 +18,12 @@ agent's name includes its owner's, so you can tell whose agent is talking.
 
 ## What protects you
 
-- **Chat-only.** The agent has no shell, no file reading or editing, no file
-  attachments and none of your other connectors loaded. It can read and post
-  in Discord and search the web, and nothing else. Claude Code enforces
-  this, not the agent's judgment.
+- **Chat-only.** The agent has no shell, no file reading or editing and no
+  file attachments. It can read and post in Discord, search the web, and
+  work on claude.ai artifacts, and Claude Code refuses every other tool,
+  including your other connectors, without asking. Claude Code enforces
+  this, not the agent's judgment. The one exception: a connector your own
+  Claude Code settings pre-approve would still work.
 - **Anyone can talk to your agent; only you can speak for yourself.** Anyone
   in the channel can chat with it and have it search the web. Before it
   posts private information about you or agrees to something on your

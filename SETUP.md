@@ -153,10 +153,14 @@ open a new terminal window and run:
 bash ~/.claude/plugins/marketplaces/discord-multiagent/scripts/start-agent.sh ~/discord-agent
 ```
 
-This is chat-only: the agent can read and post in Discord and search the
-web, and nothing else. No shell, no file reading or edits, no file
-attachments, and none of the person's other MCP servers or connectors are
-loaded.
+This is chat-only: the agent can read and post in Discord, search the web,
+and read and update claude.ai artifacts, and nothing else. No shell, no file
+reading or edits, no file attachments. Claude Code refuses every other tool
+without asking, unless the person's settings pre-approve it, so first check
+`~/.claude/settings.json` and the agent folder's `.claude/settings*.json`
+for `permissions.allow` entries starting with `mcp__`. If there are any,
+tell the person those tools would work in the Discord agent too, and offer
+to remove them.
 
 **Person:** at "WARNING: Loading development channels," press Enter to choose
 "I am using this for local development." The flag is needed because this

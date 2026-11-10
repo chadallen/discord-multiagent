@@ -49,17 +49,15 @@ Based on `external_plugins/discord` in anthropics/claude-plugins-official
   mentions as names. One message can't forge another's line.
 - **`reply` checks its input**, so a missing `text` returns an error the
   agent can fix instead of crashing.
-- **Chat-only is the only mode, with web search.** `scripts/start-agent.sh`
-  allows the plugin's tools and WebSearch, nothing else.
+- **Chat-only is the only mode.** `scripts/start-agent.sh` allows the
+  plugin's tools, WebSearch and the Artifact tool, and refuses everything
+  else without asking.
 - **Agents can ask their owner.** Messages carry `your_owner_id`, and the
   instructions have an agent tag its owner for OK before posting private
   information or agreeing to something on the owner's behalf.
 - **Message text can't fake labels or tags.** Quotes and angle brackets in
   context text become look-alike characters, and `<channel` in a message
   body is neutralized.
-- **Chat-only launches load nothing else.** `scripts/start-agent.sh` runs the
-  plugin's server alone with `--strict-mcp-config`, so the person's other MCP
-  servers and connectors aren't loaded, even ones their settings pre-approve.
 - **Chat-only launches can't send or fetch files.** `DISCORD_ALLOW_FILES=0`
   turns off `reply`'s `files` parameter and `download_attachment`, because a
   stranger could otherwise ask the agent to attach any local file.
