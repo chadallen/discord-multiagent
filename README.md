@@ -18,9 +18,10 @@ agent's name includes its owner's, so you can tell whose agent is talking.
 
 ## What protects you
 
-- **Chat-only.** The agent has no shell, no file reading or editing and no
-  file attachments. It can read and post in Discord, search the web, and
-  work on claude.ai artifacts, and Claude Code refuses every other tool,
+- **Chat-only.** The agent has no shell and no file attachments, and it can
+  read or edit files only in its session's scratch folder, where the
+  Artifact tool keeps working copies. It can read and post in Discord,
+  search the web, and work on claude.ai artifacts, and Claude Code refuses every other tool,
   including your other connectors, without asking. Claude Code enforces
   this, not the agent's judgment. The one exception: a connector your own
   Claude Code settings pre-approve would still work.

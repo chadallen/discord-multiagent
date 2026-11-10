@@ -50,8 +50,9 @@ Based on `external_plugins/discord` in anthropics/claude-plugins-official
 - **`reply` checks its input**, so a missing `text` returns an error the
   agent can fix instead of crashing.
 - **Chat-only is the only mode.** `scripts/start-agent.sh` allows the
-  plugin's tools, WebSearch and the Artifact tool, and refuses everything
-  else without asking.
+  plugin's tools, WebSearch and the Artifact tool, plus Read and Edit only
+  inside the session's own scratch folder so artifacts can be edited, and
+  refuses everything else without asking.
 - **Agents can ask their owner.** Messages carry `your_owner_id`, and the
   instructions have an agent tag its owner for OK before posting private
   information or agreeing to something on the owner's behalf.

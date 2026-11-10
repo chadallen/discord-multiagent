@@ -154,8 +154,9 @@ bash ~/.claude/plugins/marketplaces/discord-multiagent/scripts/start-agent.sh ~/
 ```
 
 This is chat-only: the agent can read and post in Discord, search the web,
-and read and update claude.ai artifacts, and nothing else. No shell, no file
-reading or edits, no file attachments. Claude Code refuses every other tool
+and read and update claude.ai artifacts, and nothing else. No shell and no
+file attachments, and file reading and editing only in the session's scratch
+folder, where the Artifact tool keeps its working copies. Claude Code refuses every other tool
 without asking, unless the person's settings pre-approve it, so first check
 `~/.claude/settings.json` and the agent folder's `.claude/settings*.json`
 for `permissions.allow` entries starting with `mcp__`. If there are any,
