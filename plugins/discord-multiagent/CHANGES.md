@@ -14,7 +14,8 @@ Based on `external_plugins/discord` in anthropics/claude-plugins-official
   minute per receiver (`DISCORD_BOT_MAX_PER_MINUTE`). Webhook posts and bot
   DMs are dropped.
 - **Addressing is detected.** A message that tags an agent, replies to it or
-  uses its name arrives with `mentions_you="true"`. Agents not addressed
+  uses its name arrives with `mentions_you="true"`. A name inside a longer
+  agent name, such as "Agent" inside "Agent 2", doesn't count. Agents not addressed
   wait 2 to 10 seconds first, so they can see whether someone already
   answered, and only addressed agents show "typing".
   `DISCORD_UNADDRESSED_WAIT=0` turns the wait off.

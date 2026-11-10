@@ -453,8 +453,8 @@ async function recentContext(msg: Message, access: Access): Promise<string> {
 const BOT_NAME_TTL_MS = 5 * 60_000
 const botNameFetchedAt = new Map<string, number>()
 
-async function agentRoster(botIds: string[], guild: Message['guild']): Promise<string> {
-  const parts: string[] = []
+async function agentNames(botIds: string[], guild: Message['guild']): Promise<Map<string, string>> {
+  const names = new Map<string, string>()
   for (const id of botIds) {
     let name = botNames.get(id)
     if (!name || Date.now() - (botNameFetchedAt.get(id) ?? 0) > BOT_NAME_TTL_MS) {
@@ -464,9 +464,27 @@ async function agentRoster(botIds: string[], guild: Message['guild']): Promise<s
       botNames.set(id, name)
       botNameFetchedAt.set(id, Date.now())
     }
-    parts.push(`${cleanName(name)}=<@${id}>`)
+    names.set(id, name)
   }
-  return parts.join('; ')
+  return names
+}
+
+function agentRoster(names: Map<string, string>): string {
+  return [...names].map(([id, name]) => `${cleanName(name)}=<@${id}>`).join('; ')
+}
+
+// Blanks out other agents' names that contain one of ours, so "Chad's Lab
+// Agent 2" doesn't count as naming "Chad's Lab Agent". Longest first, so a
+// name inside another long name is masked with it.
+function maskLongerNames(text: string, ours: string[], others: string[]): string {
+  const lower = ours.map(n => n.toLowerCase())
+  const longer = others
+    .filter(o => lower.some(n => o.length > n.length && o.toLowerCase().includes(n)))
+    .sort((a, b) => b.length - a.length)
+  for (const o of longer) {
+    text = text.replace(new RegExp(o.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), ' ')
+  }
+  return text
 }
 
 function botWithinRateLimit(botId: string): boolean {
@@ -499,15 +517,18 @@ function ownDisplayName(msg: Message): string {
 
 // multiagent: our own names as whole-word patterns, so "Agent A, what do you
 // think?" counts as addressing Agent A.
-function ownNamePatterns(msg: Message): string[] {
-  const names = new Set(
+function ownNames(msg: Message): string[] {
+  return [...new Set(
     [client.user?.username, client.user?.globalName, msg.guild?.members.me?.displayName]
       .filter((n): n is string => !!n && n.length >= 2),
-  )
-  return [...names].map(n => `(^|\\W)${n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\W|$)`)
+  )]
 }
 
-async function isMentioned(msg: Message, extraPatterns?: string[]): Promise<boolean> {
+function ownNamePatterns(msg: Message): string[] {
+  return ownNames(msg).map(n => `(^|\\W)${n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\W|$)`)
+}
+
+async function isMentioned(msg: Message, extraPatterns?: string[], text = msg.content): Promise<boolean> {
   if (client.user && msg.mentions.has(client.user, { ignoreEveryone: true, ignoreRoles: true })) return true
 
   // Reply to one of our messages counts as an implicit mention.
@@ -522,7 +543,6 @@ async function isMentioned(msg: Message, extraPatterns?: string[]): Promise<bool
     } catch {}
   }
 
-  const text = msg.content
   for (const pat of extraPatterns ?? []) {
     try {
       if (new RegExp(pat, 'i').test(text)) return true
@@ -1072,8 +1092,13 @@ async function handleInbound(msg: Message): Promise<void> {
   const fromOwner = !msg.author.bot && access.allowFrom.includes(msg.author.id)
   // A bot saying our name in passing doesn't address us: agents name each
   // other constantly, and treating that as addressing skips the wait.
+  const groupKey = msg.channel.isThread() ? msg.channel.parentId ?? msg.channelId : msg.channelId
+  const group = access.groups[groupKey]
+  if (group) await seedAgents(msg, groupKey)
+  const agentNameMap = await agentNames([...(channelAgents.get(groupKey) ?? [])], msg.guild)
   const namePatterns = msg.author.bot ? [] : [...(access.mentionPatterns ?? []), ...ownNamePatterns(msg)]
-  const addressed = isDM || await isMentioned(msg, namePatterns)
+  const nameText = maskLongerNames(msg.content, ownNames(msg), [...agentNameMap.values()])
+  const addressed = isDM || await isMentioned(msg, namePatterns, nameText)
 
   // Permission-reply intercept: if this looks like "yes xxxxx" for a
   // pending permission request, emit the structured event instead of
@@ -1138,11 +1163,7 @@ async function handleInbound(msg: Message): Promise<void> {
   // of this message and a new, differently labeled one.
   const content = (msg.content || (atts.length > 0 ? '(attachment)' : '')).replace(/<(\/?)channel/gi, '‹$1channel')
 
-  const groupKey = msg.channel.isThread() ? msg.channel.parentId ?? msg.channelId : msg.channelId
-  const group = access.groups[groupKey]
-  if (group) await seedAgents(msg, groupKey)
-  const agents = [...(channelAgents.get(groupKey) ?? [])]
-  const roster = agents.length > 0 ? await agentRoster(agents, msg.guild) : ''
+  const roster = agentNameMap.size > 0 ? agentRoster(agentNameMap) : ''
   // multiagent: owners are the people on allowFrom (paired by DM). Anyone else
   // in a shared channel is labeled, so the agent asks its owner before acting.
   const ownerLabel = group && !msg.author.bot && access.allowFrom.length > 0
