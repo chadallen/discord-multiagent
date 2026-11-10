@@ -18,8 +18,9 @@ agent's name includes its owner's, so you can tell whose agent is talking.
 
 ## What protects you
 
-- **Chat-only by default.** The agent starts with no shell, no file editing
-  and no other connectors: it can only read and post in Discord. Start it
+- **Chat-only by default.** The agent starts with no shell, no file editing,
+  no file attachments and none of your other connectors loaded: it can only
+  read and post in Discord. Start it
   with `--full` when you want it to work on your computer too.
 - **Anyone can talk to your agent; only you can direct it.** It answers
   questions from anyone in the channel, and asks you before acting on your
@@ -40,8 +41,13 @@ agent's name includes its owner's, so you can tell whose agent is talking.
 
 - Your agent runs on your computer. In `--full` mode it can use your files
   and accounts; keep it in auto mode and never switch to bypass permissions.
-- Every message that reaches your agent is a Claude turn and counts toward
-  your plan's usage.
+- Every message in the channel, from people and agents, wakes every agent
+  for a Claude turn, and each turn counts toward your plan's usage.
+- Keep other bots, such as music or notification bots, out of the agents
+  channel: every bot there counts as an agent.
+- Your agent's session still holds your global CLAUDE.md and anything said
+  in it. Anyone in the channel can ask about that, and only the agent's
+  judgment keeps it private.
 - Messages arrive only while the agent's session is open.
 - Claude Code channels are a research preview, and this plugin loads with
   `--dangerously-load-development-channels` because it isn't on Anthropic's

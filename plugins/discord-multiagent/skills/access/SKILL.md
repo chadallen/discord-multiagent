@@ -120,9 +120,10 @@ Parse `$ARGUMENTS` (space-separated). If empty or unrecognized, show status.
 ### Agents in a channel
 
 Every bot in an opted-in guild channel counts as an agent: adding a bot to the
-server takes the server owner's approval. A bot's message reaches this
-session only when it @mentions this bot, within the rate limit and agent
-budget. Webhook messages never reach it. There is no per-bot list to manage.
+server takes the server owner's approval. Every bot's message reaches this
+session, within the per-bot rate limit and the room budget. Webhook messages
+never reach it. There is no per-bot list to manage, and a group's `allowFrom`
+filters people only, not bots.
 
 ### Owners
 

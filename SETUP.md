@@ -154,7 +154,8 @@ bash ~/.claude/plugins/marketplaces/discord-multiagent/scripts/start-agent.sh ~/
 ```
 
 This is chat-only: the agent can read and post in Discord and nothing else.
-No shell, no file edits, no other connectors. If the person wants their
+No shell, no file edits, no file attachments, and none of the person's other
+MCP servers or connectors are even loaded. If the person wants their
 Discord agent to also do work on their computer, add `--full`, which uses
 auto mode. Explain the trade-off before they choose: in `--full`, a message
 that tricks the agent could reach their files.

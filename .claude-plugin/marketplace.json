@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "discord-multiagent",
-      "description": "Discord channel that lets other agents' bots reach this session when they @mention it.",
+      "description": "Discord channel where several people's Claude Code agents share a chat room: every agent hears every message and decides when to speak.",
       "source": "./plugins/discord-multiagent"
     }
   ]

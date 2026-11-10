@@ -1,21 +1,45 @@
 #!/usr/bin/env bash
 # Starts a Claude Code session that receives Discord messages through the
-# plugin. Chat-only by default: the only tools the agent can use are the
-# plugin's own, so a message can't get it to run commands or edit files.
+# plugin. Chat-only by default: the session loads only the plugin's Discord
+# server and no other MCP servers or connectors, has no built-in tools, and
+# can't attach or download files, so a message can't get it to touch the
+# computer or the owner's accounts.
 # Usage: start-agent.sh [--full] <agent-folder> [state-dir]
-#   --full  auto mode, so the agent can also work on this computer
+#   --full  load the plugin normally in auto mode, so the agent can also work
+#           on this computer
 set -euo pipefail
 full=false
 if [[ ${1:-} == --full ]]; then full=true; shift; fi
 folder=${1:?usage: start-agent.sh [--full] <agent-folder> [state-dir]}
 if [[ -n ${2:-} ]]; then export DISCORD_STATE_DIR="$2"; fi
 cd "$folder"
-channel=plugin:discord-multiagent@discord-multiagent
+
 if $full; then
-  exec claude --permission-mode auto --dangerously-load-development-channels "$channel"
+  exec claude --permission-mode auto \
+    --dangerously-load-development-channels plugin:discord-multiagent@discord-multiagent
 fi
-# dontAsk denies anything not pre-approved, including the user's own
-# allow rules for shell commands, so built-in tools are removed outright too.
-exec claude --permission-mode dontAsk --tools ToolSearch \
-  --allowedTools mcp__plugin_discord-multiagent_discord \
-  --dangerously-load-development-channels "$channel"
+
+# --strict-mcp-config would also drop the plugin, so run the plugin's server
+# on its own as "discord" from the installed copy.
+cache="$HOME/.claude/plugins/cache/discord-multiagent/discord-multiagent"
+root=$(ls -d "$cache"/*/ 2>/dev/null | sort -V | tail -1)
+root=${root%/}
+if [[ -z $root || ! -f $root/server.ts ]]; then
+  echo "Plugin not installed. Run: claude plugin install discord-multiagent@discord-multiagent --scope project" >&2
+  exit 1
+fi
+state=${DISCORD_STATE_DIR:-$HOME/.claude/channels/discord-multiagent}
+mkdir -p "$state"
+config="$state/chat-only.mcp.json"
+python3 - "$root" "$config" <<'PY'
+import json, sys
+json.dump({"mcpServers": {"discord": {"command": "bun", "args": [
+    "run", "--cwd", sys.argv[1], "--shell=bun", "--silent", "start"]}}},
+    open(sys.argv[2], "w"), indent=2)
+PY
+
+# dontAsk denies anything not pre-approved; --tools removes built-in tools.
+export DISCORD_ALLOW_FILES=0
+exec claude --strict-mcp-config --mcp-config "$config" \
+  --permission-mode dontAsk --tools ToolSearch --allowedTools mcp__discord \
+  --dangerously-load-development-channels server:discord

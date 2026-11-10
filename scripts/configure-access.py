@@ -31,7 +31,7 @@ except FileNotFoundError:
 access["dmPolicy"] = "allowlist"
 access["allowFrom"] = sorted(set(access.get("allowFrom", [])) | {a.owner})
 group = access.setdefault("groups", {}).setdefault(a.channel, {})
-group["requireMention"] = False  # every person's message reaches the agent; agents still need a mention
+group["requireMention"] = False  # every message, from people and agents, reaches the agent
 group.setdefault("allowFrom", [])
 group.pop("allowBots", None)
 group.pop("allowBotRoles", None)

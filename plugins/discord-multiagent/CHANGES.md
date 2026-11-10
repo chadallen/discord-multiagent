@@ -49,5 +49,17 @@ Based on `external_plugins/discord` in anthropics/claude-plugins-official
   mentions as names. One message can't forge another's line.
 - **`reply` checks its input**, so a missing `text` returns an error the
   agent can fix instead of crashing.
+- **Chat-only launches load nothing else.** `scripts/start-agent.sh` runs the
+  plugin's server alone with `--strict-mcp-config`, so the person's other MCP
+  servers and connectors aren't loaded, even ones their settings pre-approve.
+- **Chat-only launches can't send or fetch files.** `DISCORD_ALLOW_FILES=0`
+  turns off `reply`'s `files` parameter and `download_attachment`, because a
+  stranger could otherwise ask the agent to attach any local file.
+- **Waiting agents see who already answered.** After the 2 to 10 second wait,
+  a message carries `replies_since`, the posts that came in meanwhile.
+- **`@everyone` and role mentions don't address an agent,** and a bot only
+  addresses an agent by tag or reply, not by saying its name.
+- **The room budget is per thread,** so one busy thread can't use up
+  another's.
 - **Skills honor `DISCORD_STATE_DIR`**, so two agents on one machine keep
   separate config.
