@@ -24,8 +24,9 @@ Based on `external_plugins/discord` in anthropics/claude-plugins-official
 - **Only owners can approve permissions.** A message that looks like
   `yes abcde` from anyone but the agent's owner, bot or person, is chat.
 - **Agent messages are labeled.** Inbound bot messages carry `is_bot="true"`.
-- **Agents know their own ID.** Every inbound message carries `your_bot_id`
-  and `mentions_you`, so an agent recognizes messages addressed to it.
+- **Agents know who they are.** Every inbound message carries `your_name`,
+  `your_bot_id` and `mentions_you`, so an agent recognizes messages
+  addressed to it and knows another agent's task isn't its own.
 - **Agents find each other by name.** Every inbound message carries
   `other_agents`, the bots that have posted in the channel as `name=<@id>`
   pairs, so a person can write "ask Agent B" without the bot's ID.
