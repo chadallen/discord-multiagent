@@ -500,12 +500,6 @@ function botWithinRateLimit(botId: string): boolean {
   return true
 }
 
-const UNADDRESSED_DELAY_MIN_MS = 2_000
-const UNADDRESSED_DELAY_SPREAD_MS = 8_000
-// DISCORD_UNADDRESSED_WAIT=0 delivers unaddressed messages at once, with no
-// replies_since, to test whether the instructions alone keep agents out of
-// each other's tasks.
-const UNADDRESSED_WAIT = process.env.DISCORD_UNADDRESSED_WAIT !== '0'
 
 // multiagent: the name people see for this bot here, plus the account name
 // when it differs, such as "cg_allen's Agent B (Agent B)".
@@ -710,7 +704,7 @@ const mcp = new Server(
       '',
       `The room budget: after ${AGENT_POSTS_PER_HUMAN} agent messages in a row with no person posting, agent messages stop reaching anyone until a person speaks.`,
       '',
-      "Context: recent_messages holds channel messages you weren't sent, oldest first, separated by \" || \". replies_since holds what was posted while you waited; check it so you don't repeat someone. fetch_messages shows earlier history, one message per line; bots can't search, so fetch more or ask roughly when it was. Each entry is labeled (owner), (person), (agent), (webhook) or (you).",
+      "Context: recent_messages holds channel messages you weren't sent, oldest first, separated by \" || \". fetch_messages shows earlier history, one message per line; bots can't search, so fetch more or ask roughly when it was. Each entry is labeled (owner), (person), (agent), (webhook) or (you).",
     ].join('\n'),
   },
 )
@@ -1091,7 +1085,7 @@ async function handleInbound(msg: Message): Promise<void> {
   // to us, or our name in the text.
   const fromOwner = !msg.author.bot && access.allowFrom.includes(msg.author.id)
   // A bot saying our name in passing doesn't address us: agents name each
-  // other constantly, and treating that as addressing skips the wait.
+  // other constantly, and treating that as addressing would mark most agent posts as for us.
   const groupKey = msg.channel.isThread() ? msg.channel.parentId ?? msg.channelId : msg.channelId
   const group = access.groups[groupKey]
   if (group) await seedAgents(msg, groupKey)
@@ -1120,24 +1114,8 @@ async function handleInbound(msg: Message): Promise<void> {
     return
   }
 
-  // Marked before any wait, so a message delivered meanwhile doesn't also
-  // carry this one in its recent_messages.
+  // So a later message doesn't also carry this one in its recent_messages.
   noteDelivered(msg.id)
-
-  // multiagent: an agent nobody addressed waits a few seconds, then is shown
-  // what was posted after this message, so it can see who already answered.
-  // The owner gets no shortcut: every person counts the same in the room.
-  let repliesSince = ''
-  if (!isDM && !addressed && UNADDRESSED_WAIT) {
-    await new Promise(r => setTimeout(r, UNADDRESSED_DELAY_MIN_MS + Math.random() * UNADDRESSED_DELAY_SPREAD_MS))
-    const after = await msg.channel.messages.fetch({ limit: 10, after: msg.id }).catch(() => null)
-    if (after && after.size > 0) {
-      repliesSince = [...after.values()]
-        .sort((a, b) => a.createdTimestamp - b.createdTimestamp)
-        .map(m => formatLine(m, access, false))
-        .join(' || ')
-    }
-  }
 
   // Typing and ack only when addressed; otherwise every line in the room
   // would show every agent typing.
@@ -1195,7 +1173,6 @@ async function handleInbound(msg: Message): Promise<void> {
         ...(roster ? { other_agents: roster } : {}),
         ...ownerLabel,
         ...(recent ? { recent_messages: recent } : {}),
-        ...(repliesSince ? { replies_since: repliesSince } : {}),
         ts: msg.createdAt.toISOString(),
         ...(atts.length > 0 ? { attachment_count: String(atts.length), attachments: atts.join('; ') } : {}),
       },

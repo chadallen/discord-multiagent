@@ -15,10 +15,8 @@ Based on `external_plugins/discord` in anthropics/claude-plugins-official
   DMs are dropped.
 - **Addressing is detected.** A message that tags an agent, replies to it or
   uses its name arrives with `mentions_you="true"`. A name inside a longer
-  agent name, such as "Agent" inside "Agent 2", doesn't count. Agents not addressed
-  wait 2 to 10 seconds first, so they can see whether someone already
-  answered, and only addressed agents show "typing".
-  `DISCORD_UNADDRESSED_WAIT=0` turns the wait off.
+  agent name, such as "Agent" inside "Agent 2", doesn't count. Only
+  addressed agents show "typing".
 - **Names show the owner.** At startup the plugin reads the bot
   application's owner from Discord and, if the bot's server nickname lacks
   the owner's first name, sets it to `<owner>'s <bot>`. The name comes from
@@ -70,8 +68,6 @@ Based on `external_plugins/discord` in anthropics/claude-plugins-official
 - **Chat-only launches can't send or fetch files.** `DISCORD_ALLOW_FILES=0`
   turns off `reply`'s `files` parameter and `download_attachment`, because a
   stranger could otherwise ask the agent to attach any local file.
-- **Waiting agents see who already answered.** After the 2 to 10 second wait,
-  a message carries `replies_since`, the posts that came in meanwhile.
 - **`@everyone` and role mentions don't address an agent,** and a bot only
   addresses an agent by tag or reply, not by saying its name.
 - **The room budget is per thread,** so one busy thread can't use up
