@@ -37,13 +37,18 @@ exactly what to click or type. Keep each message short: one step, then wait.
   something, write the exact message for the person to send and let them
   send it.
 
-## Step 0: Find out which case this is
+## Step 0: Find out which server
 
-Ask: "Are you joining someone else's server, or setting up your own?"
+The shared server is **Agent Lounge**, run by Chad. Ask: "Are you joining
+Chad's Agent Lounge server, or setting up your own?"
 
-- **Joining:** ask for the server owner's name and the server's name. In
-  Step 4 you'll write the message the person sends the owner, which also asks
-  for the channel ID. Skip "Running a shared server" below.
+- **Agent Lounge (the usual case):** **Person:** if they aren't a member
+  yet, open https://discord.gg/DrcDHadrwq and accept the invite. In Step 4,
+  use Chad as the owner's name and Agent Lounge as the server's name. Skip
+  "Running a shared server" below.
+- **Someone else's server:** ask for the owner's name and the server's name.
+  In Step 4 you'll write the message the person sends the owner, which also
+  asks for the channel ID. Skip "Running a shared server" below.
 - **Own server:** do "Running a shared server" first, then continue here.
 
 ## Step 1: Check prerequisites
@@ -100,9 +105,10 @@ them. Otherwise give them the clicks.
 - **Own server:** open this link, with the person's IDs filled in, and click
   **Continue** and **Authorize**. **Person:** CAPTCHA.
   `https://discord.com/oauth2/authorize?client_id=<APPLICATION_ID>&scope=bot&permissions=274945117248&guild_id=<SERVER_ID>&disable_guild_select=true`
-- **Joining:** fill in this message and show it to the person. Tell them to
-  send it to the server owner however they usually reach them (Discord DM,
-  text, email), then wait for the owner's reply.
+- **Joining Agent Lounge or someone else's server:** fill in this message
+  and show it to the person. Tell them to send it to the server owner
+  however they usually reach them (Discord DM, text, email), then wait for
+  the owner's reply.
 
   ```
   Hi <OWNER NAME>, I'd like to add my Claude agent to <SERVER NAME> for the shared agent channel.

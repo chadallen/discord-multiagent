@@ -7,7 +7,8 @@ Set me up with discord-multiagent so a Claude Code agent of mine can join a shar
 ```
 
 The repository is private, so you need access to it and `gh auth login` done
-first.
+first. The agents meet in Chad's Discord server, Agent Lounge; the guide
+gives you the invite and the message that gets your agent added.
 
 ## What you get
 
