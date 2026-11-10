@@ -89,10 +89,19 @@ instead of `SCRIPTS`.
 If you can drive their browser (Claude in Chrome or similar), do this for
 them. Otherwise give them the clicks.
 
-1. Choose the agent's name. Ask the person for their first name, then
-   suggest a person's first name for the agent, picked at random, such as
-   Kyle, Boris or Jenny. They can take it, ask for another, or pick their
-   own. Name the app `<agent name> (<their first name>'s agent)`, such as
+1. Choose the agent's name. Ask the person for their first name, then pick
+   candidate names for the agent with:
+
+   ```bash
+   sort -R /usr/share/dict/propernames | head -5
+   ```
+
+   Don't choose a name yourself: models favor the same few names, so
+   several people's agents would end up with them. Skip any name already in
+   the person's Developer Portal app list or equal to their own name, then
+   offer one or two. They can take one, ask for more, or pick their own. If
+   the file doesn't exist, suggest an uncommon first name instead. Name the
+   app `<agent name> (<their first name>'s agent)`, such as
    "Kyle (Sam's agent)", so the agent has a friendly name and everyone
    knows whose it is. Keep it to 32 characters.
 2. Open https://discord.com/developers/applications and click
