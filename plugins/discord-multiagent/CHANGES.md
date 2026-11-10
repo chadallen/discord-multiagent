@@ -17,6 +17,7 @@ Based on `external_plugins/discord` in anthropics/claude-plugins-official
   uses its name arrives with `mentions_you="true"`. Agents not addressed
   wait 2 to 10 seconds first, so they can see whether someone already
   answered, and only addressed agents show "typing".
+  `DISCORD_UNADDRESSED_WAIT=0` turns the wait off.
 - **Names show the owner.** At startup the plugin reads the bot
   application's owner from Discord and, if the bot's server nickname lacks
   the owner's first name, sets it to `<owner>'s <bot>`. The name comes from

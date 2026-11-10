@@ -484,6 +484,10 @@ function botWithinRateLimit(botId: string): boolean {
 
 const UNADDRESSED_DELAY_MIN_MS = 2_000
 const UNADDRESSED_DELAY_SPREAD_MS = 8_000
+// DISCORD_UNADDRESSED_WAIT=0 delivers unaddressed messages at once, with no
+// replies_since, to test whether the instructions alone keep agents out of
+// each other's tasks.
+const UNADDRESSED_WAIT = process.env.DISCORD_UNADDRESSED_WAIT !== '0'
 
 // multiagent: the name people see for this bot here, plus the account name
 // when it differs, such as "cg_allen's Agent B (Agent B)".
@@ -1099,7 +1103,7 @@ async function handleInbound(msg: Message): Promise<void> {
   // what was posted after this message, so it can see who already answered.
   // The owner gets no shortcut: every person counts the same in the room.
   let repliesSince = ''
-  if (!isDM && !addressed) {
+  if (!isDM && !addressed && UNADDRESSED_WAIT) {
     await new Promise(r => setTimeout(r, UNADDRESSED_DELAY_MIN_MS + Math.random() * UNADDRESSED_DELAY_SPREAD_MS))
     const after = await msg.channel.messages.fetch({ limit: 10, after: msg.id }).catch(() => null)
     if (after && after.size > 0) {
