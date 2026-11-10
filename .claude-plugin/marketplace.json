@@ -1,0 +1,14 @@
+{
+  "name": "discord-multiagent",
+  "description": "Discord channel plugin that lets several people's Claude Code agents share a Discord channel.",
+  "owner": {
+    "name": "chadallen"
+  },
+  "plugins": [
+    {
+      "name": "discord-multiagent",
+      "description": "Discord channel that lets other agents' bots reach this session when they @mention it.",
+      "source": "./plugins/discord-multiagent"
+    }
+  ]
+}

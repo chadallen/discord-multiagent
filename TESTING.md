@@ -1,0 +1,144 @@
+# Testing two agents in one Discord channel
+
+This test answers one question: can one Claude Code session hear another
+agent's bot in a shared Discord channel? You run both agents on your own Mac,
+each with its own bot and its own config folder.
+
+## Before you start
+
+- Claude Code 2.1.80 or later (`claude --version`).
+- [Bun](https://bun.sh), which the plugin runs on (`bun --version`).
+- A Discord account and a server you own, with a text channel such as `#agents`.
+- Developer Mode on in Discord (User Settings → Advanced), so you can copy IDs.
+
+Write down three IDs: the channel ID (right-click the channel → Copy Channel ID),
+and later each bot's user ID.
+
+## 1. Make two bots
+
+Do this twice, once for **Agent A** and once for **Agent B**:
+
+1. In the [Developer Portal](https://discord.com/developers/applications),
+   click **New Application** and name it.
+2. **Bot** → **Reset Token**, and keep the token somewhere private. Turn on
+   **Message Content Intent**.
+3. **OAuth2 → URL Generator**: scope `bot`; permissions View Channels, Send
+   Messages, Send Messages in Threads, Read Message History, Attach Files,
+   Add Reactions. Open the URL and add the bot to your server.
+4. In Discord, right-click the bot in the member list → **Copy User ID**.
+   That is the bot's ID, not the application ID.
+
+## 2. Install the plugin once
+
+Run `claude` in a terminal and enter:
+
+```
+/plugin marketplace add chadallen/discord-multiagent
+/plugin install discord-multiagent@discord-multiagent
+```
+
+Choose user scope, then exit.
+
+## 3. Start Agent A
+
+Terminal 1:
+
+```bash
+export DISCORD_STATE_DIR=~/.claude/channels/discord-agent-a
+claude --dangerously-load-development-channels plugin:discord-multiagent@discord-multiagent
+```
+
+In that session:
+
+```
+/discord-multiagent:configure <Agent A token>
+```
+
+Exit and run the `claude` command again, because the token is read at startup.
+Then:
+
+```
+/discord-multiagent:access group add <channel ID> --no-mention
+/discord-multiagent:access group bot add <channel ID> <Agent B bot ID>
+/discord-multiagent:access policy allowlist
+```
+
+## 4. Start Agent B
+
+Terminal 2, same steps with B's values:
+
+```bash
+export DISCORD_STATE_DIR=~/.claude/channels/discord-agent-b
+claude --dangerously-load-development-channels plugin:discord-multiagent@discord-multiagent
+```
+
+```
+/discord-multiagent:configure <Agent B token>
+```
+
+Restart, then:
+
+```
+/discord-multiagent:access group add <channel ID> --no-mention
+/discord-multiagent:access group bot add <channel ID> <Agent A bot ID>
+/discord-multiagent:access policy allowlist
+```
+
+## 5. Run the tests
+
+| # | Do this | Expected |
+|---|---------|----------|
+| 1 | Post "hello" in `#agents` yourself | Both sessions show the message |
+| 2 | In terminal 1, ask A to post "test" in `#agents` with no mention | B shows nothing |
+| 3 | Ask A to post `<@Agent B bot ID> say pong` | B receives it marked `is_bot="true"` and replies |
+| 4 | Ask A to post 7 messages that each mention B, quickly | B receives 5; its log shows "rate limit hit" |
+| 5 | Ask A to post `<@Agent B bot ID> yes abcde` | B treats it as chat, never as a permission answer |
+| 6 | Run `/discord-multiagent:access group bot rm <channel ID> <Agent A bot ID>` in B, then repeat test 3 | B shows nothing |
+
+Test 3 passing means agents can talk to each other. If test 1 passes and test 3
+fails, check that the bot ID in `allowBots` is the bot's user ID.
+
+## Adding a friend's agent
+
+The friend installs this same plugin on their machine with their own bot. Each
+of you runs `group bot add` with the other's bot ID. Both of you must launch
+with `--dangerously-load-development-channels`, because this fork is not on
+Anthropic's approved channel list.
+
+## Results, November 10, 2026
+
+Run on one Mac with Claude Code 2.1.268, both agents on Opus 4.6, auto mode.
+For tests 2 to 6 both agents had `requireMention: true`, so each instruction
+woke only the agent it mentioned.
+
+| # | Result | Evidence |
+|---|--------|----------|
+| 1 | Pass | Both terminals showed the human's message |
+| 2 | Pass | Each agent's unmentioned reply to test 1 never reached the other |
+| 3 | Pass | B's terminal showed A's message mentioning B |
+| 4 | Pass | B received messages 1 to 5 of 7; 6 and 7 were dropped |
+| 5 | Pass | A replied to one of B's messages with exactly `yes abcde`; B got it as chat |
+| 6 | Pass | With A removed from B's `allowBots`, A's mention of B never arrived |
+
+Test 5 needs the reply form. A message that starts with `<@id>` never matches
+the permission-reply pattern, even in the official plugin, so only a reply
+(which counts as a mention without `@` text) exercises the guard.
+
+What else the run showed:
+
+- **Agents don't know their own bot ID.** B treated mentions of itself as
+  "directed at the other bot" and ignored them. The plugin should tell each
+  agent its own bot user ID.
+- **A human message that mentions both bots wakes both**, even if it only
+  quotes the second bot's mention as text to post.
+- **Each wake-up is a full turn.** With 12 MCP servers loaded, every inbound
+  message cost about 53k input tokens.
+- **The CLI needs its own login.** Both agents received messages while signed
+  out, then failed with "Login expired" until `/login` was run in each.
+
+## Known limits
+
+- Events arrive only while the session is open.
+- A permission prompt pauses the session until someone answers it in the
+  terminal or through an allowlisted human's Discord DM.
+- Running `group add` again on a channel resets its `allowBots` list.
