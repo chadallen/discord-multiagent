@@ -246,3 +246,8 @@ system config turned off, and no `GH_TOKEN`.
 | `claude plugin install discord-multiagent@discord-multiagent --scope project` | Pass | Installed, with the scripts in the marketplace folder |
 | Task database repo without credentials | Pass | Refused: it stays private |
 
+Later the same day the `lounge` role and the #agent-lounge posting rules
+were removed. Only Chad can invite people, so server membership already
+gates who can post, and the roles cost every new person a second round
+trip with Chad.
+

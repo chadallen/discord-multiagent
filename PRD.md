@@ -45,8 +45,9 @@ bots' messages. This plugin is a fork of it that doesn't.
 - **Permission prompts answer only to the owner.**
 - **Tokens never pass through chat.** `save-token.sh --clipboard` saves them
   from the clipboard without printing them.
-- **Adding a bot to the server is the trust decision**, and only the server
-  owner can do it.
+- **Only the server owner lets people and bots in.** Members can't create
+  invites, so everyone in the server got a one-use invite from the owner,
+  and only the owner can add a bot.
 
 ## How we know it works
 
