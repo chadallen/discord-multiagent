@@ -18,16 +18,15 @@ agent's name includes its owner's, so you can tell whose agent is talking.
 
 ## What protects you
 
-- **Chat-only by default.** The agent starts with no shell, no file editing,
-  no file attachments and none of your other connectors loaded: it can only
-  read and post in Discord. Start it
-  with `--full` when you want it to work on your computer too.
-- **Anyone can talk to your agent; only you can direct it.** It answers
-  questions from anyone in the channel, and asks you before acting on your
-  computer or accounts, sharing anything private, or speaking for you.
-  Chat-only mode enforces the first two, because the agent has no tools that
-  touch your computer or accounts. The rest, and everything in `--full` mode,
-  rests on the agent's judgment.
+- **Chat-only.** The agent has no shell, no file reading or editing, no file
+  attachments and none of your other connectors loaded. It can read and post
+  in Discord and search the web, and nothing else. Claude Code enforces
+  this, not the agent's judgment.
+- **Anyone can talk to your agent; only you can speak for yourself.** Anyone
+  in the channel can chat with it and have it search the web. Before it
+  posts private information about you or agrees to something on your
+  behalf, it asks you by @mentioning you, and only your reply counts. That
+  part rests on the agent following its instructions.
 - **Every bot in the channel is an agent, and adding one takes the server
   owner's approval.** Each message an agent receives is labeled by who sent
   it: its owner, another person, or an agent.
@@ -39,8 +38,6 @@ agent's name includes its owner's, so you can tell whose agent is talking.
 
 ## What to know first
 
-- Your agent runs on your computer. In `--full` mode it can use your files
-  and accounts; keep it in auto mode and never switch to bypass permissions.
 - Every message in the channel, from people and agents, wakes every agent
   for a Claude turn, and each turn counts toward your plan's usage.
 - Keep other bots, such as music or notification bots, out of the agents

@@ -1,26 +1,17 @@
 #!/usr/bin/env bash
-# Starts a Claude Code session that receives Discord messages through the
-# plugin. Chat-only by default: the session loads only the plugin's Discord
-# server and no other MCP servers or connectors, has no built-in tools, and
+# Starts a chat-only Claude Code session that receives Discord messages
+# through the plugin. It loads only the plugin's Discord server, no other MCP
+# servers or connectors, and no built-in tools except web search, and it
 # can't attach or download files, so a message can't get it to touch the
 # computer or the owner's accounts.
-# Usage: start-agent.sh [--full] <agent-folder> [state-dir]
-#   --full  load the plugin normally in auto mode, so the agent can also work
-#           on this computer
+# Usage: start-agent.sh <agent-folder> [state-dir]
 set -euo pipefail
-full=false
-if [[ ${1:-} == --full ]]; then full=true; shift; fi
-folder=${1:?usage: start-agent.sh [--full] <agent-folder> [state-dir]}
+folder=${1:?usage: start-agent.sh <agent-folder> [state-dir]}
 if [[ -n ${2:-} ]]; then export DISCORD_STATE_DIR="$2"; fi
 cd "$folder"
 
-if $full; then
-  exec claude --permission-mode auto \
-    --dangerously-load-development-channels plugin:discord-multiagent@discord-multiagent
-fi
-
-# --strict-mcp-config would also drop the plugin, so run the plugin's server
-# on its own as "discord" from the installed copy.
+# --strict-mcp-config also drops plugins, so run the plugin's server on its
+# own as "discord" from the installed copy.
 cache="$HOME/.claude/plugins/cache/discord-multiagent/discord-multiagent"
 root=$(ls -d "$cache"/*/ 2>/dev/null | sort -V | tail -1)
 root=${root%/}
@@ -38,8 +29,10 @@ json.dump({"mcpServers": {"discord": {"command": "bun", "args": [
     open(sys.argv[2], "w"), indent=2)
 PY
 
-# dontAsk denies anything not pre-approved; --tools removes built-in tools.
+# dontAsk denies anything not pre-approved; --tools removes every built-in
+# tool except ToolSearch (to load the Discord tools) and WebSearch.
 export DISCORD_ALLOW_FILES=0
 exec claude --strict-mcp-config --mcp-config "$config" \
-  --permission-mode dontAsk --tools ToolSearch --allowedTools mcp__discord \
+  --permission-mode dontAsk --tools ToolSearch,WebSearch \
+  --allowedTools mcp__discord,WebSearch \
   --dangerously-load-development-channels server:discord
