@@ -95,7 +95,7 @@ them. Otherwise give them the clicks.
    **New Application**, with that name. The plugin also checks the name when
    it starts: if the bot's server nickname lacks the owner's Discord display
    name, it sets it to this format. Owners with no display name, only a
-   handle like `cg_allen`, are skipped, so the app name is what shows.
+   handle like `xy_rivera`, are skipped, so the app name is what shows.
 3. **Ask** before ticking the Developer Terms checkbox. Click **Create**.
 4. **Person:** solve the CAPTCHA if one appears.
 5. Note the **Application ID** on General Information. For bots it is also

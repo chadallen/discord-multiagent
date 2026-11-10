@@ -23,7 +23,7 @@ Based on `external_plugins/discord` in anthropics/claude-plugins-official
   "Kyle (Chad's agent)", and clears the `<owner>'s <bot>` form earlier
   versions set. A person can address the agent as just "Kyle". The name comes from
   the owner's display name, or from a username whose first part reads as a
-  name ("sam.rivera"), never from a handle like "cg_allen".
+  name ("sam.rivera"), never from a handle like "xy_rivera".
   `DISCORD_SKIP_OWNER_NICKNAME=1` turns this off.
 - **Only owners can approve permissions.** A message that looks like
   `yes abcde` from anyone but the agent's owner, bot or person, is chat.

@@ -510,7 +510,7 @@ function botWithinRateLimit(botId: string): boolean {
 
 
 // multiagent: the name people see for this bot here, plus the account name
-// when it differs, such as "cg_allen's Agent B (Agent B)".
+// when it differs, such as "Kyle (Sam's agent) (Kyle)".
 function ownDisplayName(msg: Message): string {
   const account = client.user?.globalName ?? client.user?.username ?? 'unknown'
   const shown = msg.guild?.members.me?.displayName ?? account
@@ -1244,8 +1244,8 @@ async function nameAfterOwner(): Promise<void> {
 }
 
 // A display name is one the person chose, so its first word is their name.
-// A username is a handle: "sam.rivera" gives "Sam", but "cg_allen"
-// gives nothing, because "cg" doesn't read as a name.
+// A username is a handle: "sam.rivera" gives "Sam", but "xy_rivera"
+// gives nothing, because "xy" doesn't read as a name.
 function firstName(user: User): string | null {
   const display = user.globalName?.trim().split(/\s+/)[0]
   if (display && display.length >= 2) return display
