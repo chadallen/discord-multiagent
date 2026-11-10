@@ -24,6 +24,9 @@ a version bump and an update in each agent folder:
 
 ## Constraints
 
+- This repo is public. The Beads task database syncs to the private repo
+  chadallen/discord-multiagent-tasks; never point `bd dolt remote` at this
+  one, and keep real names, handles and invite links out of commits.
 - Keep the server instructions in `server.ts` under 4,096 characters. Claude
   Code drops the rest without telling the model.
 - Show Chad any change to the instruction text before applying it.

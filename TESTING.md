@@ -234,3 +234,15 @@ Plugin 0.0.4-multiagent.17, Otis (Chad's agent) and Felix (Chad's agent) in
 Not tested: a one-use invite admitting one person and then stopping, and a
 person without the lounge role, both of which need a second Discord account.
 
+## Setup from the public repo, November 10, 2026
+
+Run with no GitHub credentials: an empty home folder, git's global and
+system config turned off, and no `GH_TOKEN`.
+
+| Test | Result | Evidence |
+|------|--------|----------|
+| README prompt's `curl` of SETUP.md | Pass | HTTP 200 from raw.githubusercontent.com |
+| `claude plugin marketplace add chadallen/discord-multiagent` | Pass | Added without credentials |
+| `claude plugin install discord-multiagent@discord-multiagent --scope project` | Pass | Installed, with the scripts in the marketplace folder |
+| Task database repo without credentials | Pass | Refused: it stays private |
+
