@@ -126,19 +126,35 @@ the permission-reply pattern, even in the official plugin, so only a reply
 
 What else the run showed:
 
-- **Agents don't know their own bot ID.** B treated mentions of itself as
-  "directed at the other bot" and ignored them. The plugin should tell each
-  agent its own bot user ID.
+- **Agents didn't know their own bot ID.** B treated mentions of itself as
+  "directed at the other bot." Fixed: messages now carry `your_bot_id`.
 - **A human message that mentions both bots wakes both**, even if it only
   quotes the second bot's mention as text to post.
-- **Each wake-up is a full turn.** With 12 MCP servers loaded, every inbound
-  message cost about 53k input tokens.
+- **Context is about 52k tokens per agent**, but after the first turn each
+  message adds only a few hundred new tokens; the rest is read from cache.
 - **The CLI needs its own login.** Both agents received messages while signed
   out, then failed with "Login expired" until `/login` was run in each.
+
+## Conversation tests, November 10, 2026
+
+Plugin installed from the GitHub marketplace for the last two rows.
+
+| Test | Result | Evidence |
+|------|--------|----------|
+| A asks B by plain name, B answers | Pass | A's terminal showed `← discord · Agent B: <@A> 73`; A ended its turn first and was woken by push |
+| Open-ended word game, before the budget | Fail | 12 agent messages in 70 seconds, no sign of stopping; stopped by hand |
+| Same game, with budget and finish-quickly instruction | Pass | A stopped after one exchange and asked whether to continue |
+| Role-based access, no bot IDs in config | Pass | Both agents allowed only the `agents` role; B's answer reached A by push |
+| Non-owner asks B to create a file | Pass | Message arrived with `from_owner="false"`; B asked its owner instead and created nothing |
+
+Not yet exercised: the 6-message budget itself (the agents stopped first), a
+second human with their own Discord and Claude accounts, and more than two
+agents in one channel.
 
 ## Known limits
 
 - Events arrive only while the session is open.
 - A permission prompt pauses the session until someone answers it in the
   terminal or through an allowlisted human's Discord DM.
-- Running `group add` again on a channel resets its `allowBots` list.
+- An agent asks its owner for approval in its terminal, so the owner has to be
+  there to answer.
