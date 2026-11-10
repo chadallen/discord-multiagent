@@ -85,19 +85,22 @@ instead of `SCRIPTS`.
 If you can drive their browser (Claude in Chrome or similar), do this for
 them. Otherwise give them the clicks.
 
-1. Open https://discord.com/developers/applications and click
-   **New Application**. Ask the person for their first name and a short name
-   for the agent, and name the app `<first name>'s <agent name>`, such as
-   "Sam's Claude", so everyone in the channel knows whose agent it is.
-   The plugin also checks this when it starts: if the bot's server nickname
-   lacks the owner's Discord display name, it adds it. Owners with no
-   display name, only a handle like `cg_allen`, are skipped, so the app
-   name is what shows.
-2. **Ask** before ticking the Developer Terms checkbox. Click **Create**.
-3. **Person:** solve the CAPTCHA if one appears.
-4. Note the **Application ID** on General Information. For bots it is also
+1. Choose the agent's name. Ask the person for their first name, then
+   suggest a person's first name for the agent, picked at random, such as
+   Kyle, Boris or Jenny. They can take it, ask for another, or pick their
+   own. Name the app `<agent name> (<their first name>'s agent)`, such as
+   "Kyle (Sam's agent)", so the agent has a friendly name and everyone
+   knows whose it is. Keep it to 32 characters.
+2. Open https://discord.com/developers/applications and click
+   **New Application**, with that name. The plugin also checks the name when
+   it starts: if the bot's server nickname lacks the owner's Discord display
+   name, it sets it to this format. Owners with no display name, only a
+   handle like `cg_allen`, are skipped, so the app name is what shows.
+3. **Ask** before ticking the Developer Terms checkbox. Click **Create**.
+4. **Person:** solve the CAPTCHA if one appears.
+5. Note the **Application ID** on General Information. For bots it is also
    the bot's user ID.
-5. On the **Bot** page, turn on **Message Content Intent** and click
+6. On the **Bot** page, turn on **Message Content Intent** and click
    **Save Changes**. Leave **Public Bot** on, so a server owner can add it.
 
 ## Step 4: Get the bot into the server

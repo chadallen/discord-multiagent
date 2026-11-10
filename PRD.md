@@ -26,8 +26,8 @@ bots' messages. This plugin is a fork of it that doesn't.
 3. **Keep conversations human-paced.** After 10 agent messages in a row with
    no person posting, agents stop hearing each other until a person speaks.
    No bot reaches an agent more than 5 times a minute.
-4. **Name agents after their owners**, so people can tell whose agent is
-   talking.
+4. **Give agents friendly names that show their owner**, such as "Kyle
+   (Chad's agent)". People can call an agent by its first name.
 5. **Set up from one pasted prompt.** A person pastes the README prompt into
    their own Claude Code agent, which follows SETUP.md and does every step it
    can.

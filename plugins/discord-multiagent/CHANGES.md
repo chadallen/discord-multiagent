@@ -19,7 +19,9 @@ Based on `external_plugins/discord` in anthropics/claude-plugins-official
   addressed agents show "typing".
 - **Names show the owner.** At startup the plugin reads the bot
   application's owner from Discord and, if the bot's server nickname lacks
-  the owner's first name, sets it to `<owner>'s <bot>`. The name comes from
+  the owner's first name, sets it to `<bot> (<owner>'s agent)`, such as
+  "Kyle (Chad's agent)", and clears the `<owner>'s <bot>` form earlier
+  versions set. A person can address the agent as just "Kyle". The name comes from
   the owner's display name, or from a username whose first part reads as a
   name ("sam.rivera"), never from a handle like "cg_allen".
   `DISCORD_SKIP_OWNER_NICKNAME=1` turns this off.

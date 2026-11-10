@@ -506,15 +506,20 @@ function botWithinRateLimit(botId: string): boolean {
 function ownDisplayName(msg: Message): string {
   const account = client.user?.globalName ?? client.user?.username ?? 'unknown'
   const shown = msg.guild?.members.me?.displayName ?? account
-  return shown === account ? shown : `${shown} (${account})`
+  return shown.includes(account) ? shown : `${shown} (${account})`
 }
 
+// "Kyle (Chad's agent)": the agent's own name, then whose agent it is.
+const OWNER_TAG = /^(.+?) \((.+)'s agent\)$/
+
 // multiagent: our own names as whole-word patterns, so "Agent A, what do you
-// think?" counts as addressing Agent A.
+// think?" counts as addressing Agent A. People call "Kyle (Chad's agent)"
+// Kyle, so the part before the owner tag counts too.
 function ownNames(msg: Message): string[] {
+  const full = [client.user?.username, client.user?.globalName, msg.guild?.members.me?.displayName]
+  const short = full.map(n => n?.match(OWNER_TAG)?.[1])
   return [...new Set(
-    [client.user?.username, client.user?.globalName, msg.guild?.members.me?.displayName]
-      .filter((n): n is string => !!n && n.length >= 2),
+    [...full, ...short].filter((n): n is string => !!n && n.length >= 2),
   )]
 }
 
@@ -1217,14 +1222,16 @@ async function nameAfterOwner(): Promise<void> {
     const guild = await client.guilds.fetch(guildId).catch(() => null)
     const me = guild?.members.me ?? await guild?.members.fetchMe().catch(() => null)
     if (!me) continue
-    const setByUs = me.nickname?.endsWith(`'s ${botName}`) === true
+    // Earlier versions set "<owner>'s <bot>"; this one sets "<bot> (<owner>'s agent)".
+    const setByUs = me.nickname != null &&
+      (me.nickname.endsWith(`'s ${botName}`) || (me.nickname.startsWith(`${botName} (`) && OWNER_TAG.test(me.nickname)))
     let nick: string | null
     if (nameIsFine) {
       if (!setByUs) continue
       nick = null
     } else {
       if (tagWord!.test(me.displayName)) continue
-      nick = `${ownerTag}'s ${botName}`.slice(0, 32)
+      nick = `${botName} (${ownerTag}'s agent)`.slice(0, 32)
     }
     await me.setNickname(nick).catch(err =>
       process.stderr.write(`discord channel: could not set nickname in ${guildId} (needs Change Nickname): ${err}\n`))
