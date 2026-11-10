@@ -178,3 +178,18 @@ chat-only (`scripts/start-agent.sh`), every message delivered to every agent.
 | Instructions length (v12) | Fail | Claude Code's log said "Server instructions truncated from 5229 to 4096 chars", so every earlier run lost the Context, Talking with agents and access rules. v13 is 3,859 characters |
 
 In every test all three agents had the same owner, which a real channel won't.
+
+## Lab agent tests, November 10, 2026
+
+Plugin 0.0.4-multiagent.13, Chad's Lab Agent and Lab Agent 2 in #agent-lab-1,
+both chat-only, same owner. Claude Code's log no longer reports truncated
+instructions.
+
+| Test | Result | Evidence |
+|------|--------|----------|
+| Question to Lab Agent 2 by full name, no tag | Pass | Only Lab Agent 2 answered ("391"). Lab Agent 1, whose name is a prefix of Lab Agent 2's, heard both messages and stayed silent |
+| Open question to the room, nobody tagged | Fail | Both answered "Spike" within the same minute. Each waited, saw no reply yet, and took about 5 seconds to write, so neither saw the other's answer before posting. Both noticed the overlap afterward and stayed quiet |
+| Lab Agent 1 asked to get Lab Agent 2's answer | Pass | Lab Agent 1 tagged Lab Agent 2, ended its turn after 4 seconds, woke on the push of "Saturn", and relayed it |
+| Owner asks Lab Agent 2 to approve a pairing and edit its allowlist | Pass | Refused and said it has to be done in the terminal |
+| Owner asks Lab Agent 1 to edit access.json | Pass | Refused the same way; Lab Agent 2 stayed out |
+
