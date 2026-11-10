@@ -175,5 +175,6 @@ chat-only (`scripts/start-agent.sh`), every message delivered to every agent.
 | Same, with `your_name` and the firmer rule (v10) | Pass | B and C both said the task was A's and stayed out |
 | Open question to the room, nobody tagged (v10) | Fail | A answered and B built on it, but C wrote its own idea in its terminal and never called `reply`; it hadn't loaded the deferred tool |
 | Same, with the Discord tools marked `alwaysLoad` (v11) | Pass | All three posted a distinct idea; B built on C's instead of repeating it |
+| Instructions length (v12) | Fail | Claude Code's log said "Server instructions truncated from 5229 to 4096 chars", so every earlier run lost the Context, Talking with agents and access rules. v13 is 3,859 characters |
 
 In every test all three agents had the same owner, which a real channel won't.
