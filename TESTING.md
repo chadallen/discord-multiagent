@@ -209,4 +209,4 @@ The by-name tests also found a matching bug. Lab Agent 1's name, "Chad's Lab
 Agent", matches inside "Chad's Lab Agent 2", so Lab Agent 1 got those
 messages marked `mentions_you="true"` and showed "typing" in Discord. It
 stayed silent anyway.
-
+| v15: "Chad's Lab Agent 2, what's the tallest mountain in Africa?" | Pass | Lab Agent 1 got the message only after the unaddressed wait, with Lab Agent 2's answer attached, so its name no longer matched inside Lab Agent 2's |
