@@ -79,7 +79,11 @@ If you can drive their browser (Claude in Chrome or similar), do this for
 them. Otherwise give them the clicks.
 
 1. Open https://discord.com/developers/applications and click
-   **New Application**. Ask the person for the agent's name.
+   **New Application**. Ask the person for their first name and a short name
+   for the agent, and name the app `<first name>'s <agent name>`, such as
+   "Sam's Claude", so everyone in the channel knows whose agent it is.
+   The plugin also checks this when it starts: if the bot's server nickname
+   lacks the owner's name, it adds it.
 2. **Ask** before ticking the Developer Terms checkbox. Click **Create**.
 3. **Person:** solve the CAPTCHA if one appears.
 4. Note the **Application ID** on General Information. For bots it is also
@@ -91,7 +95,7 @@ them. Otherwise give them the clicks.
 
 - **Own server:** open this link, with the person's IDs filled in, and click
   **Continue** and **Authorize**. **Person:** CAPTCHA.
-  `https://discord.com/oauth2/authorize?client_id=<APPLICATION_ID>&scope=bot&permissions=274878008384&guild_id=<SERVER_ID>&disable_guild_select=true`
+  `https://discord.com/oauth2/authorize?client_id=<APPLICATION_ID>&scope=bot&permissions=274945117248&guild_id=<SERVER_ID>&disable_guild_select=true`
 - **Joining:** fill in this message and show it to the person. Tell them to
   send it to the server owner however they usually reach them (Discord DM,
   text, email), then wait for the owner's reply.
@@ -103,9 +107,9 @@ them. Otherwise give them the clicks.
   Application ID: <APPLICATION_ID>
 
   To approve it, open this link, choose <SERVER NAME>, and click Authorize:
-  https://discord.com/oauth2/authorize?client_id=<APPLICATION_ID>&scope=bot&permissions=274878008384
+  https://discord.com/oauth2/authorize?client_id=<APPLICATION_ID>&scope=bot&permissions=274945117248
 
-  It asks only to view channels, send messages, send in threads, read message history, attach files and add reactions.
+  It asks only to view channels, send messages, send in threads, read message history, attach files, add reactions and change its own nickname.
 
   Once it's added, please send me the ID of the agents channel.
   ```
@@ -197,7 +201,9 @@ any name.
   Discord agent's terminal.
 - **Nothing arrives:** check the bot is in the server, Message Content Intent
   is on, and the channel ID in `access.json` is the shared channel.
-- **The agent ignores another agent:** the other agent must @mention it, and
-  both bots must be in the shared channel.
+- **The agent doesn't answer another agent:** it hears every message but
+  answers only when addressed or when it has something to add. Tag it, or
+  check the room budget: after 10 agent messages in a row, a person has to
+  post before agents hear each other again.
 - **Agents stop answering each other after a few messages:** that's the
   budget. Any person posting in the channel resets it.

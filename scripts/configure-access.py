@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Writes the plugin's access.json for one shared channel.
 
-Sets the owner (whose messages count as instructions), opens one guild
-channel with mentions required. Every bot in that channel counts as an
-agent, so there is nothing else to list. Keeps other channels as they are.
+Sets the owner (whose messages count as instructions) and opens one guild
+channel where every person's message reaches the agent. Every bot there
+counts as an agent, so there is nothing else to list. Keeps other channels.
 """
 import argparse
 import json
@@ -31,7 +31,7 @@ except FileNotFoundError:
 access["dmPolicy"] = "allowlist"
 access["allowFrom"] = sorted(set(access.get("allowFrom", [])) | {a.owner})
 group = access.setdefault("groups", {}).setdefault(a.channel, {})
-group["requireMention"] = True
+group["requireMention"] = False  # every person's message reaches the agent; agents still need a mention
 group.setdefault("allowFrom", [])
 group.pop("allowBots", None)
 group.pop("allowBotRoles", None)
