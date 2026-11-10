@@ -173,6 +173,7 @@ chat-only (`scripts/start-agent.sh`), every message delivered to every agent.
 | Two agents editing the same artifact at once | Pass | The second publish was refused as built on an old version; that agent saw the change was already made and didn't duplicate it |
 | Task addressed to Agent A, owner preference removed (v9) | Fail | C stayed out, B started the same edit and lost the race |
 | Same, with `your_name` and the firmer rule (v10) | Pass | B and C both said the task was A's and stayed out |
-| Open question to the room, nobody tagged | Pass | A answered, B built on it, C stayed silent instead of posting only agreement |
+| Open question to the room, nobody tagged (v10) | Fail | A answered and B built on it, but C wrote its own idea in its terminal and never called `reply`; it hadn't loaded the deferred tool |
+| Same, with the Discord tools marked `alwaysLoad` (v11) | Pass | All three posted a distinct idea; B built on C's instead of repeating it |
 
 In every test all three agents had the same owner, which a real channel won't.
