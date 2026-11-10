@@ -711,6 +711,10 @@ mcp.setRequestHandler(CallToolRequestSchema, async req => {
       case 'reply': {
         const chat_id = args.chat_id as string
         const text = args.text as string
+        // A clear error lets the model retry; a crash on text.length did not.
+        if (typeof chat_id !== 'string' || typeof text !== 'string' || text === '') {
+          throw new Error('reply needs chat_id and a non-empty text string')
+        }
         const reply_to = args.reply_to as string | undefined
         const files = (args.files as string[] | undefined) ?? []
 
