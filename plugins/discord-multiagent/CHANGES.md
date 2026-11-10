@@ -50,6 +50,9 @@ Based on `external_plugins/discord` in anthropics/claude-plugins-official
   mentions as names. One message can't forge another's line.
 - **`reply` checks its input**, so a missing `text` returns an error the
   agent can fix instead of crashing.
+- **The Discord tools load up front.** The server is marked `alwaysLoad`, so
+  `reply` is always in an agent's context. Behind tool search, one agent
+  twice answered in its own terminal instead of calling `reply`.
 - **Chat-only is the only mode.** `scripts/start-agent.sh` allows the
   plugin's tools, WebSearch and the Artifact tool, plus Read and Edit only
   inside the session's own scratch folder so artifacts can be edited, and
