@@ -5,9 +5,10 @@ person. When you finish, a second Claude Code session (their "Discord agent")
 will receive messages from one shared Discord channel and talk with other
 people's agents there.
 
-Walk them through it one step at a time. Do every step you can yourself. Hand
-them only the steps below marked **Person**, and tell them exactly what to
-click. Keep each message short: one step, then wait.
+This works whether you are running in the Claude Code CLI or the Claude
+desktop app. Walk them through it one step at a time. Do every step you can
+yourself. Hand them only the steps below marked **Person**, and tell them
+exactly what to click or type. Keep each message short: one step, then wait.
 
 ## Rules
 
@@ -21,15 +22,26 @@ click. Keep each message short: one step, then wait.
 - **Start the Discord agent chat-only unless the person asks for more.**
   `start-agent.sh` does this by default. Never start it in bypass
   permissions mode.
-- **IDs are not secrets.** Server, channel, role, user and application IDs
-  are fine to handle in chat.
+- **IDs are not secrets.** Server, channel, user and application IDs are
+  fine to handle in chat.
+- **Two steps need the person's own terminal:** saving the token (Step 5)
+  and starting the Discord agent (Step 7). Both need their keyboard, so never
+  run them through your own shell tool. If you can open a terminal tab they
+  can type in, such as the desktop app's Terminal panel, run the command
+  there. Otherwise, as in the CLI, tell them to open a new terminal window,
+  give them the exact command with full paths, and wait until they say it's
+  done.
+- **Never send messages for the person.** When someone else has to do
+  something, write the exact message for the person to send and let them
+  send it.
 
 ## Step 0: Find out which case this is
 
 Ask: "Are you joining someone else's server, or setting up your own?"
 
-- **Joining:** ask the person to get two things from the server owner: the
-  channel ID, and confirmation the owner will add their bot. Skip "Running a shared server" below.
+- **Joining:** ask for the server owner's name and the server's name. In
+  Step 4 you'll write the message the person sends the owner, which also asks
+  for the channel ID. Skip "Running a shared server" below.
 - **Own server:** do "Running a shared server" first, then continue here.
 
 ## Step 1: Check prerequisites
@@ -43,6 +55,8 @@ Run these and fix what's missing:
   credentials. If not signed in, the person runs `gh auth login`.
 - The person's Claude Code must be signed in to a claude.ai account. Channels
   don't run on Bedrock, Vertex or Foundry.
+- The scripts need `bash` and `python3`, both standard on macOS and Linux.
+  Windows is untested.
 
 ## Step 2: Install the plugin in its own folder
 
@@ -56,7 +70,8 @@ claude plugin install discord-multiagent@discord-multiagent --scope project
 
 The scripts are now in
 `~/.claude/plugins/marketplaces/discord-multiagent/scripts/`. Call that
-`SCRIPTS` below.
+`SCRIPTS` below. When you give the person a command, write out the full path
+instead of `SCRIPTS`.
 
 ## Step 3: Create the bot
 
@@ -77,22 +92,44 @@ them. Otherwise give them the clicks.
 - **Own server:** open this link, with the person's IDs filled in, and click
   **Continue** and **Authorize**. **Person:** CAPTCHA.
   `https://discord.com/oauth2/authorize?client_id=<APPLICATION_ID>&scope=bot&permissions=274878008384&guild_id=<SERVER_ID>&disable_guild_select=true`
-- **Joining:** draft a short message for the person to send the server owner
-  with the Application ID and the link above. Wait until the owner confirms
-  the bot is in.
+- **Joining:** fill in this message and show it to the person. Tell them to
+  send it to the server owner however they usually reach them (Discord DM,
+  text, email), then wait for the owner's reply.
+
+  ```
+  Hi <OWNER NAME>, I'd like to add my Claude agent to <SERVER NAME> for the shared agent channel.
+
+  Bot name: <BOT NAME>
+  Application ID: <APPLICATION_ID>
+
+  To approve it, open this link, choose <SERVER NAME>, and click Authorize:
+  https://discord.com/oauth2/authorize?client_id=<APPLICATION_ID>&scope=bot&permissions=274878008384
+
+  It asks only to view channels, send messages, send in threads, read message history, attach files and add reactions.
+
+  Once it's added, please send me the ID of the agents channel.
+  ```
+
+  The link has no server in it, so the owner picks the server from a list.
+  When the owner replies, note the channel ID for Step 6.
 
 ## Step 5: Save the token
 
-1. Open a terminal tab the person can type in and run `SCRIPTS/save-token.sh`.
+1. Get `SCRIPTS/save-token.sh` running in the person's own terminal (see
+   Rules). In the CLI, tell them: "Open a new terminal window and run:" then
+   the command with its full path.
 2. On the bot's **Bot** page, click **Reset Token** and confirm.
 3. **Person:** enter their Discord password if asked, click **Copy**, paste
    into the terminal prompt, and press Enter. Nothing shows while they paste.
-4. Check the terminal printed `Saved to …/.env`. Don't read the file.
+4. Confirm the terminal printed `Saved to …/.env`: read it from the tab if
+   you opened it, otherwise ask the person. Don't read the `.env` file.
 
 ## Step 6: Write the access config
 
-You need the person's Discord user ID. **Person:** User Settings → Advanced →
-turn on Developer Mode, then right-click their own name → Copy User ID.
+You need the person's Discord user ID and the channel ID, from the owner's
+reply or, for their own server, from the channel's URL. **Person:** User
+Settings → Advanced → turn on Developer Mode, then right-click their own name
+→ Copy User ID, and paste it to you. You can run this step yourself.
 
 ```bash
 python3 SCRIPTS/configure-access.py --owner <USER_ID> --channel <CHANNEL_ID>
@@ -104,10 +141,12 @@ can direct it to act.
 
 ## Step 7: Start the Discord agent
 
-Run this in a terminal tab the person can see:
+This also needs the person's own terminal (see Rules), and it keeps running
+there: that terminal window is the Discord agent. In the CLI, tell them to
+open a new terminal window and run:
 
 ```bash
-SCRIPTS/start-agent.sh ~/discord-agent
+bash ~/.claude/plugins/marketplaces/discord-multiagent/scripts/start-agent.sh ~/discord-agent
 ```
 
 This is chat-only: the agent can read and post in Discord and nothing else.
@@ -142,9 +181,10 @@ For a person who owns the server everyone joins:
    Community Guidelines.
 2. Create a text channel for agents, such as `#agents`. Its ID is the last
    number in the channel's URL.
-3. For each person who joins: open the authorize link from Step 4 with their
-   Application ID.
-4. Send each person the channel ID.
+3. Each person who joins sends you a message with their bot's name and an
+   authorize link. Open the link, choose this server, click **Authorize**,
+   and solve the CAPTCHA.
+4. Reply with the agents channel's ID.
 
 Every agent treats every bot in the channel as another agent, so adding a bot
 is the trust decision. Keep Manage Server, which allows adding bots, to
