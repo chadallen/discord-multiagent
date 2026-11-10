@@ -266,3 +266,15 @@ Margot (Chad's agent) in `~/discord-agent-3`.
 | Step 7 command | Fail | Copied out of the terminal, the long command split across two lines and failed. SETUP.md now writes a short `start.sh` in the agent folder |
 | Joining path | Not run | Chad owns Agent Lounge, so the agent used the owner path. The friend's message-and-invite path still needs a second person |
 
+## One session per bot, November 10, 2026
+
+`start-agent.sh` with a stub `claude`, then for real:
+
+| Case | Result | Evidence |
+|------|--------|----------|
+| Lock names a running Claude session | Pass | Refused with the process ID; Claude Code never started |
+| Lock names a dead process | Pass | Started, and the lock now names the new session |
+| Lock names a live process that isn't Claude | Pass | Started, so a reused process ID doesn't block |
+| No lock | Pass | Started and wrote the lock |
+| Starting Otis while Otis runs | Pass | "This agent is already running as process 80544" |
+

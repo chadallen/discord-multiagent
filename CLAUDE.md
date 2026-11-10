@@ -34,9 +34,9 @@ a version bump and an update in each agent folder:
   bypass permissions mode.
 - Never read a bot token or a `.env` file. Save tokens with
   `scripts/save-token.sh --clipboard`.
-- Closing a terminal tab can leave its agent running. Before restarting
-  agents, check `pgrep -fl "multiagent.<version>"` for old ones still
-  connected, or every message gets two replies.
+- Closing a terminal tab can leave its agent running. `start-agent.sh`
+  refuses to start an agent whose session in `<config folder>/agent.pid` is
+  still alive; stop that one first instead of deleting the file.
 
 ## Local test setup
 

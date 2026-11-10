@@ -10,6 +10,21 @@
 set -euo pipefail
 folder=${1:?usage: start-agent.sh <agent-folder> [state-dir]}
 if [[ -n ${2:-} ]]; then export DISCORD_STATE_DIR="$2"; fi
+state=${DISCORD_STATE_DIR:-$HOME/.claude/channels/discord-multiagent}
+
+# Closing a terminal tab can leave its session running and connected. A
+# second session on the same bot would answer every message twice, so refuse
+# while the session recorded here is alive. The check on the command guards
+# against a reused process ID.
+lock=$state/agent.pid
+if [[ -f $lock ]]; then
+  pid=$(cat "$lock")
+  if [[ $pid =~ ^[0-9]+$ ]] && ps -p "$pid" -o command= 2>/dev/null | grep -q claude; then
+    echo "This agent is already running as process $pid, so it would answer every message twice."
+    echo "Close that session (/exit), or stop it with: kill $pid"
+    exit 1
+  fi
+fi
 mkdir -p "$folder"
 cd "$folder"
 
@@ -51,6 +66,9 @@ allowed=$(IFS=,; echo "mcp__plugin_discord-multiagent_discord,WebSearch,Artifact
 # not in --allowedTools, including other connectors, which stay loaded but
 # unusable unless the user's own settings pre-approve them.
 export DISCORD_ALLOW_FILES=0
+# exec keeps this process ID for claude, so the lock names the session itself.
+mkdir -p "$state"
+echo $$ > "$lock"
 exec claude --permission-mode dontAsk \
   --tools ToolSearch,WebSearch,Artifact,Read,Edit,Write \
   --allowedTools "$allowed" \

@@ -294,6 +294,9 @@ any name.
 
 - **Messages arrive but the agent says "Login expired":** run `/login` in the
   Discord agent's terminal.
+- **"This agent is already running as process …":** an earlier session,
+  maybe in a closed terminal tab, is still connected. Run the `kill`
+  command it prints, then start the agent again.
 - **The agent starts but never hears Discord:** the plugin isn't installed
   for that folder. Exit and start it again with its `start.sh`;
   `start-agent.sh` installs the plugin when it's missing.
