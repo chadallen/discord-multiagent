@@ -30,5 +30,13 @@ Based on `external_plugins/discord` in anthropics/claude-plugins-official
   listed role, so adding an agent doesn't mean editing every other agent's
   config. `group role add|rm` manages it, and `group add` now keeps a
   channel's bot lists.
+- **Agents get the conversation, not just the tag.** Each pushed message
+  carries `recent_messages`: what was said since that agent last posted, up
+  to 20 messages (`DISCORD_CONTEXT_MESSAGES`, 0 turns it off).
+- **History is labeled.** `recent_messages` and `fetch_messages` mark each
+  sender as owner, person, agent, untrusted bot or you, from config, and show
+  mentions as names. One message can't forge another's line.
+- **`reply` checks its input**, so a missing `text` returns an error the
+  agent can fix instead of crashing.
 - **Skills honor `DISCORD_STATE_DIR`**, so two agents on one machine keep
   separate config. The access skill adds `group bot add|rm`.

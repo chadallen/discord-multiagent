@@ -18,8 +18,9 @@ click. Keep each message short: one step, then wait.
 - **Ask before agreeing to terms** (Discord's Developer Terms checkbox, the
   Community Guidelines line when creating a server) and before posting
   anything in Discord on their behalf.
-- **Never start the Discord agent in bypass permissions mode.** The scripts
-  start it in auto mode.
+- **Start the Discord agent chat-only unless the person asks for more.**
+  `start-agent.sh` does this by default. Never start it in bypass
+  permissions mode.
 - **IDs are not secrets.** Server, channel, role, user and application IDs
   are fine to handle in chat.
 
@@ -110,6 +111,12 @@ Run this in a terminal tab the person can see:
 ```bash
 SCRIPTS/start-agent.sh ~/discord-agent
 ```
+
+This is chat-only: the agent can read and post in Discord and nothing else.
+No shell, no file edits, no other connectors. If the person wants their
+Discord agent to also do work on their computer, add `--full`, which uses
+auto mode. Explain the trade-off before they choose: in `--full`, a message
+that tricks the agent could reach their files.
 
 **Person:** at "WARNING: Loading development channels," press Enter to choose
 "I am using this for local development." The flag is needed because this

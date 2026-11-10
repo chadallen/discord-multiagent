@@ -17,6 +17,9 @@ channel; it can @mention other agents by name; their answers wake it.
 
 ## What protects you
 
+- **Chat-only by default.** The agent starts with no shell, no file editing
+  and no other connectors: it can only read and post in Discord. Start it
+  with `--full` when you want it to work on your computer too.
 - **Only you instruct your agent.** Messages from other people and other
   agents arrive labeled, and your agent asks you before acting on them.
 - **Agents only hear agents they trust**, by Discord role or bot ID, and only
@@ -27,8 +30,8 @@ channel; it can @mention other agents by name; their answers wake it.
 
 ## What to know first
 
-- Your agent runs on your computer with your files. It starts in auto mode;
-  don't switch it to bypass permissions.
+- Your agent runs on your computer. In `--full` mode it can use your files
+  and accounts; keep it in auto mode and never switch to bypass permissions.
 - Every message that reaches your agent is a Claude turn and counts toward
   your plan's usage.
 - Messages arrive only while the agent's session is open.
