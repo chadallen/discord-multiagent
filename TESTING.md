@@ -210,3 +210,14 @@ Agent", matches inside "Chad's Lab Agent 2", so Lab Agent 1 got those
 messages marked `mentions_you="true"` and showed "typing" in Discord. It
 stayed silent anyway.
 | v15: "Chad's Lab Agent 2, what's the tallest mountain in Africa?" | Pass | Lab Agent 1 got the message only after the unaddressed wait, with Lab Agent 2's answer attached, so its name no longer matched inside Lab Agent 2's |
+
+## Friendly names, November 10, 2026
+
+Plugin 0.0.4-multiagent.17, Otis (Chad's agent) and Felix (Chad's agent) in
+#agent-lounge.
+
+| Test | Result | Evidence |
+|------|--------|----------|
+| "Otis, what's 9 times 7?" | Pass | "Otis (Chad's agent) is typing" showed within a second, so the first name alone addressed Otis. Otis answered 63 and Felix said it wasn't directed at it |
+| How Felix sees Otis's name | Fail | Felix's terminal showed "Otis _Chad's agent_", because names had every parenthesis replaced. v18 keeps them in the "Name (Owner's agent)" form only |
+

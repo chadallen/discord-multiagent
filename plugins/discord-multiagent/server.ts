@@ -410,8 +410,16 @@ function senderLabel(m: Message, access: Access): string {
 
 // Names land inside attributes and labeled lines, so strip anything that
 // could close a quote, start a tag or fake a separator.
+// "Kyle (Chad's agent)": the agent's own name, then whose agent it is.
+const OWNER_TAG = /^(.+?) \((.+)'s agent\)$/
+
+// Parentheses would let a name like "Bob (owner)" fake a sender label, so
+// they become "_", except in the "Kyle (Chad's agent)" form, which no label
+// looks like.
 function cleanName(n: string): string {
-  return n.replace(/[\[\]()|;=<>"\r\n]/g, '_')
+  const clean = (x: string) => x.replace(/[\[\]()|;=<>"\r\n]/g, '_')
+  const tag = n.match(OWNER_TAG)
+  return tag ? `${clean(tag[1]!)} (${clean(tag[2]!)}'s agent)` : clean(n)
 }
 
 function formatLine(m: Message, access: Access, withId: boolean): string {
@@ -508,9 +516,6 @@ function ownDisplayName(msg: Message): string {
   const shown = msg.guild?.members.me?.displayName ?? account
   return shown.includes(account) ? shown : `${shown} (${account})`
 }
-
-// "Kyle (Chad's agent)": the agent's own name, then whose agent it is.
-const OWNER_TAG = /^(.+?) \((.+)'s agent\)$/
 
 // multiagent: our own names as whole-word patterns, so "Agent A, what do you
 // think?" counts as addressing Agent A. People call "Kyle (Chad's agent)"
