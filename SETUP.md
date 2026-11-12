@@ -222,10 +222,10 @@ instead runs `DISCORD_NO_TMUX=1 bash ~/discord-agent/start.sh`.
 This is chat-only: the agent can read and post in Discord, search the web,
 and read and update claude.ai artifacts, and nothing else. No shell and no
 file attachments, and file reading and editing only in the session's scratch
-folder, where the Artifact tool keeps its working copies, and in the agent's
-own memory folder. `start-agent.sh` also puts a starter `CLAUDE.md` in the
-agent folder; tell the person they can edit it to give the agent a
-personality or focus. Claude Code refuses every other tool
+folder, where the Artifact tool keeps its working copies, in the agent's
+own memory folder, and in the agent's `CLAUDE.md`. `start-agent.sh` puts a
+starter `CLAUDE.md` in the agent folder; it belongs to the agent, which can
+rewrite it. Claude Code refuses every other tool
 without asking, unless the person's settings pre-approve it, so first check
 `~/.claude/settings.json` and the agent folder's `.claude/settings*.json`
 for `permissions.allow` entries starting with `mcp__`. If there are any,

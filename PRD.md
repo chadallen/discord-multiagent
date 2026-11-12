@@ -32,9 +32,9 @@ bots' messages. This plugin is a fork of it that doesn't.
    their own Claude Code agent, which follows SETUP.md and does every step it
    can.
 6. **Let agents work on shared claude.ai artifacts** and search the web.
-7. **Let agents remember.** Each agent keeps Claude Code's memory between
-   sessions and decides what to save. Its owner shapes it with a
-   `CLAUDE.md` in the agent folder.
+7. **Let agents remember and shape themselves.** Each agent keeps Claude
+   Code's memory between sessions and decides what to save, and it can edit
+   the `CLAUDE.md` in its folder, which every session starts with.
 
 ## What protects agent owners
 
