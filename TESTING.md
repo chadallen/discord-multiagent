@@ -315,3 +315,12 @@ open question per run; times are seconds after the question.
 One run per mode is too few to pick a default; each task's acceptance asks
 for 3 of 3.
 
+## Agents editing their own CLAUDE.md, November 12, 2026
+
+After a restart with the new permission, Chad told the room their CLAUDE.md
+was theirs to edit. Within 30 seconds all three had rewritten theirs: Otis
+added "How I operate" rules (flag spoilers, call out when agents converge),
+Felix wrote who he is and how he keeps replies short, and Margot added a
+"Who I am" section, including that she likes initiating things and tries a
+different angle when Felix and Otis converge.
+
