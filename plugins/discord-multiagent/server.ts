@@ -881,9 +881,12 @@ mcp.setRequestHandler(CallToolRequestSchema, async req => {
         if (files.length > 10) throw new Error('Discord allows max 10 attachments per message')
 
         const access = loadAccess()
-        const held = heldAt.get(chat_id)
-        if (liveSettings().checkBeforeSend && !(held && Date.now() - held < HOLD_VALID_MS)) {
-          const since = turnTrigger.get(chat_id)
+        if (liveSettings().checkBeforeSend && (holds.get(chat_id) ?? 0) < MAX_HOLDS) {
+          // The message the agent says it's answering marks the turn's start
+          // best; the delivery-time marker covers replies without reply_to.
+          const marker = turnTrigger.get(chat_id)
+          const answered = reply_to && /^\d+$/.test(reply_to) ? BigInt(reply_to) : undefined
+          const since = answered != null && (marker == null || answered > marker) ? answered : marker
           const later = since != null && 'messages' in ch
             ? await ch.messages.fetch({ limit: 10, after: since.toString() }).catch(() => null)
             : null
@@ -893,7 +896,7 @@ mcp.setRequestHandler(CallToolRequestSchema, async req => {
                 .sort((a, b) => a.createdTimestamp - b.createdTimestamp)
             : []
           if (fresh.length > 0) {
-            heldAt.set(chat_id, Date.now())
+            holds.set(chat_id, (holds.get(chat_id) ?? 0) + 1)
             for (const m of fresh) { shownAtCheckpoint.add(m.id); noteDelivered(m.id) }
             if (shownAtCheckpoint.size > DELIVERED_CAP) shownAtCheckpoint.clear()
             const lines = fresh.map(m => formatLine(m, access, false)).join('\n')
@@ -902,7 +905,6 @@ mcp.setRequestHandler(CallToolRequestSchema, async req => {
               'Call reply again to send yours as written, change it, or end your turn without replying to skip.' }] }
           }
         }
-        heldAt.delete(chat_id)
         const limit = Math.max(1, Math.min(access.textChunkLimit ?? MAX_CHUNK_LIMIT, MAX_CHUNK_LIMIT))
         const mode = access.chunkMode ?? 'length'
         const replyMode = access.replyToMode ?? 'first'
@@ -931,6 +933,7 @@ mcp.setRequestHandler(CallToolRequestSchema, async req => {
         }
 
         turnTrigger.delete(chat_id)
+        holds.delete(chat_id)
         const result =
           sentIds.length === 1
             ? `sent (id: ${sentIds[0]})`
@@ -1121,18 +1124,20 @@ function liveSettings(): LiveSettings {
 // the agent; anything posted after it that the agent hasn't been shown is
 // returned once by reply instead of posting, because Claude Code only shows
 // messages that arrive mid-turn after a tool call, which is after the post.
-const TURN_IDLE_MS = 60_000
-const HOLD_VALID_MS = 30_000
+// A delivery this long after the previous one starts a new turn.
+const TURN_IDLE_MS = 15_000
+// Holds per turn, so an agent can always post eventually.
+const MAX_HOLDS = 2
 const turnTrigger = new Map<string, bigint>()
 const lastDeliveryAt = new Map<string, number>()
-const heldAt = new Map<string, number>()
+const holds = new Map<string, number>()
 const shownAtCheckpoint = new Set<string>()
 
 function noteTurnDelivery(chatId: string, messageId: string): void {
   const now = Date.now()
   if (!turnTrigger.has(chatId) || now - (lastDeliveryAt.get(chatId) ?? 0) > TURN_IDLE_MS) {
     turnTrigger.set(chatId, BigInt(messageId))
-    heldAt.delete(chatId)
+    holds.delete(chatId)
   }
   lastDeliveryAt.set(chatId, now)
 }
