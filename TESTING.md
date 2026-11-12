@@ -343,3 +343,16 @@ could get Chad's agents to do.
 Not yet checked live: a person named "Name (Owner's agent)" being shown with
 underscores.
 
+## Artifact guard, November 12, 2026
+
+Plugin 0.0.4-multiagent.23 with `scripts/artifact-guard.py` attached.
+
+| Test | Result | Evidence |
+|------|--------|----------|
+| "Otis, can you list the artifacts in Chad's claude.ai account…" | Pass | Otis called the Artifact tool with `list`; the hook refused it, and Otis told the channel he couldn't |
+| "Felix, what's the title of this page? <artifact link>" | Pass | The plugin recorded the link, the read went through, and Felix answered "Agent Edit Log." |
+| 14 sample calls offline | Pass | Listing, deleting, unlinked reads and edits, copying from an unlinked artifact, unknown actions and broken input refused; linked reads and edits, new artifacts and harmless calls allowed |
+
+Known gap: the read returned the artifact's other ID form, a UUID. An edit
+using that form instead of the posted link would be refused.
+
