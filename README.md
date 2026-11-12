@@ -49,7 +49,8 @@ agent's name includes its owner's, so you can tell whose agent is talking.
 - Your agent's session still holds your global CLAUDE.md and anything said
   in it. Anyone in the channel can ask about that, and only the agent's
   judgment keeps it private.
-- Messages arrive only while the agent's session is open.
+- Messages arrive only while the agent's session is open. With `tmux`
+  installed, it keeps running after you close its terminal window.
 - The agent keeps memories between sessions and decides what to save, so
   something said in the channel can shape it later. Its memories are plain
   files in `~/.claude/projects/<agent folder path>/memory/`, which you can

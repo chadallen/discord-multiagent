@@ -63,6 +63,9 @@ Run these and fix what's missing:
   don't run on Bedrock, Vertex or Foundry.
 - The scripts need `bash` and `python3`, both standard on macOS and Linux.
   Windows is untested.
+- Offer to install `tmux` (`brew install tmux` on macOS). With it, the
+  Discord agent keeps running after its terminal window closes. Without it,
+  the window has to stay open.
 
 ## Step 2: Install the plugin in its own folder
 
@@ -212,6 +215,11 @@ bash ~/discord-agent/start.sh
 
 That is also how they start it again later. A restart reopens the agent's
 last session, so it keeps its conversation.
+
+With tmux installed, the agent runs in a tmux session named after its folder.
+The person can close the window at any time and the agent keeps running;
+running `start.sh` again reattaches. To leave without stopping it, press
+Ctrl-b, then d.
 
 This is chat-only: the agent can read and post in Discord, search the web,
 and read and update claude.ai artifacts, and nothing else. No shell and no

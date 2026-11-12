@@ -881,6 +881,28 @@ mcp.setRequestHandler(CallToolRequestSchema, async req => {
         if (files.length > 10) throw new Error('Discord allows max 10 attachments per message')
 
         const access = loadAccess()
+        const held = heldAt.get(chat_id)
+        if (liveSettings().checkBeforeSend && !(held && Date.now() - held < HOLD_VALID_MS)) {
+          const since = turnTrigger.get(chat_id)
+          const later = since != null && 'messages' in ch
+            ? await ch.messages.fetch({ limit: 10, after: since.toString() }).catch(() => null)
+            : null
+          const fresh = later
+            ? [...later.values()]
+                .filter(m => m.author.id !== client.user?.id && !m.webhookId && !shownAtCheckpoint.has(m.id))
+                .sort((a, b) => a.createdTimestamp - b.createdTimestamp)
+            : []
+          if (fresh.length > 0) {
+            heldAt.set(chat_id, Date.now())
+            for (const m of fresh) { shownAtCheckpoint.add(m.id); noteDelivered(m.id) }
+            if (shownAtCheckpoint.size > DELIVERED_CAP) shownAtCheckpoint.clear()
+            const lines = fresh.map(m => formatLine(m, access, false)).join('\n')
+            return { content: [{ type: 'text', text:
+              `Not posted yet. While you were writing, ${fresh.length === 1 ? 'this was' : 'these were'} posted:\n${lines}\n` +
+              'Call reply again to send yours as written, change it, or end your turn without replying to skip.' }] }
+          }
+        }
+        heldAt.delete(chat_id)
         const limit = Math.max(1, Math.min(access.textChunkLimit ?? MAX_CHUNK_LIMIT, MAX_CHUNK_LIMIT))
         const mode = access.chunkMode ?? 'length'
         const replyMode = access.replyToMode ?? 'first'
@@ -908,6 +930,7 @@ mcp.setRequestHandler(CallToolRequestSchema, async req => {
           throw new Error(`reply failed after ${sentIds.length} of ${chunks.length} chunk(s) sent: ${msg}`)
         }
 
+        turnTrigger.delete(chat_id)
         const result =
           sentIds.length === 1
             ? `sent (id: ${sentIds[0]})`
@@ -1078,6 +1101,42 @@ const TURN_MS = (Number.isFinite(turnEnv) && turnEnv >= 0 ? turnEnv : 10) * 1000
 // order; this caps how long they can hold up the rest.
 const TURN_MAX_WAIT_MS = 40_000
 
+// multiagent: switches read on every use from settings.json in the config
+// folder, so they can be changed without restarting the agent. Missing keys
+// fall back to the environment and defaults.
+type LiveSettings = { turnTaking: boolean; turnSeconds: number; checkBeforeSend: boolean }
+const SETTINGS_FILE = join(STATE_DIR, 'settings.json')
+function liveSettings(): LiveSettings {
+  let raw: Partial<LiveSettings> = {}
+  try { raw = JSON.parse(readFileSync(SETTINGS_FILE, 'utf8')) } catch {}
+  const turnSeconds = typeof raw.turnSeconds === 'number' && raw.turnSeconds >= 0 ? raw.turnSeconds : TURN_MS / 1000
+  return {
+    turnTaking: typeof raw.turnTaking === 'boolean' ? raw.turnTaking : TURN_MS > 0,
+    turnSeconds,
+    checkBeforeSend: typeof raw.checkBeforeSend === 'boolean' ? raw.checkBeforeSend : true,
+  }
+}
+
+// multiagent: check before sending. A turn starts with the message that woke
+// the agent; anything posted after it that the agent hasn't been shown is
+// returned once by reply instead of posting, because Claude Code only shows
+// messages that arrive mid-turn after a tool call, which is after the post.
+const TURN_IDLE_MS = 60_000
+const HOLD_VALID_MS = 30_000
+const turnTrigger = new Map<string, bigint>()
+const lastDeliveryAt = new Map<string, number>()
+const heldAt = new Map<string, number>()
+const shownAtCheckpoint = new Set<string>()
+
+function noteTurnDelivery(chatId: string, messageId: string): void {
+  const now = Date.now()
+  if (!turnTrigger.has(chatId) || now - (lastDeliveryAt.get(chatId) ?? 0) > TURN_IDLE_MS) {
+    turnTrigger.set(chatId, BigInt(messageId))
+    heldAt.delete(chatId)
+  }
+  lastDeliveryAt.set(chatId, now)
+}
+
 const lastBotPost = new Map<string, bigint>()
 const postWaiters = new Set<() => void>()
 
@@ -1109,7 +1168,7 @@ function turnOrder(messageId: string, botIds: string[]): string[] {
 }
 
 // Returns whether this agent had to wait, i.e. wasn't first.
-async function waitForTurn(msg: Message, botIds: string[]): Promise<boolean> {
+async function waitForTurn(msg: Message, botIds: string[], turnMs: number): Promise<boolean> {
   const me = client.user?.id
   if (!me) return false
   const order = turnOrder(msg.id, [...new Set([...botIds, me])].filter(id => id !== msg.author.id))
@@ -1120,7 +1179,7 @@ async function waitForTurn(msg: Message, botIds: string[]): Promise<boolean> {
   for (const id of ahead) {
     const left = deadline - Date.now()
     if (left <= 0) break
-    await waitForPost(msg.channelId, id, after, Math.min(TURN_MS, left))
+    await waitForPost(msg.channelId, id, after, Math.min(turnMs, left))
   }
   return true
 }
@@ -1203,7 +1262,8 @@ async function handleInbound(msg: Message): Promise<void> {
   // So a later message doesn't also carry this one in its recent_messages.
   noteDelivered(msg.id)
 
-  const isOpen = !isDM && !addressed && !!group && TURN_MS > 0 &&
+  const live = liveSettings()
+  const isOpen = !isDM && !addressed && !!group && live.turnTaking && live.turnSeconds > 0 &&
     !addressesAnAgent(msg, [...agentNameMap.values()])
   let release = () => {}
   if (isOpen) {
@@ -1216,7 +1276,7 @@ async function handleInbound(msg: Message): Promise<void> {
     const mine = new Promise<void>(r => { release = r })
     deliveryChain.set(chat_id, prev.then(() => mine))
     await prev
-    if (await waitForTurn(msg, [...agentNameMap.keys()])) {
+    if (await waitForTurn(msg, [...agentNameMap.keys()], live.turnSeconds * 1000)) {
       // Someone else spoke during the wait: skip this message, and the newer
       // one, delivered next, carries it in recent_messages.
       const later = await msg.channel.messages.fetch({ limit: 10, after: msg.id }).catch(() => null)
@@ -1259,6 +1319,7 @@ async function handleInbound(msg: Message): Promise<void> {
     ? { from_owner: access.allowFrom.includes(msg.author.id) ? 'true' : 'false' }
     : {}
   const recent = group ? await recentContext(msg, access) : ''
+  if (group) noteTurnDelivery(chat_id, msg.id)
 
   mcp.notification({
     method: 'notifications/claude/channel',

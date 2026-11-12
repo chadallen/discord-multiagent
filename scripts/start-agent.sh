@@ -14,6 +14,27 @@ script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 if [[ -n ${2:-} ]]; then export DISCORD_STATE_DIR="$2"; fi
 state=${DISCORD_STATE_DIR:-$HOME/.claude/channels/discord-multiagent}
 
+# Run the agent inside tmux, when it's installed, so it keeps running with no
+# terminal open and its owner can reattach to watch or answer it. Running this
+# again reattaches. DISCORD_NO_TMUX=1 runs it in this terminal instead.
+mkdir -p "$folder"
+folder=$(cd "$folder" && pwd -P)
+if [[ -z ${TMUX:-} && -z ${DISCORD_NO_TMUX:-} ]] && command -v tmux >/dev/null; then
+  name=$(basename "$folder" | sed 's/[^A-Za-z0-9_-]/-/g')
+  if tmux has-session -t "=$name" 2>/dev/null; then
+    if [[ -t 0 ]]; then exec tmux attach -t "=$name"; fi
+    echo "Already running in tmux session $name. Attach with: tmux attach -t $name"
+    exit 0
+  fi
+  inner=$(printf '%q ' env "DISCORD_STATE_DIR=$state" \
+    ${DISCORD_TURN_SECONDS:+"DISCORD_TURN_SECONDS=$DISCORD_TURN_SECONDS"} \
+    bash "$script_dir/start-agent.sh" "$folder")
+  tmux new-session -d -s "$name" "$inner"
+  if [[ -t 0 ]]; then exec tmux attach -t "=$name"; fi
+  echo "Started in tmux session $name. Attach with: tmux attach -t $name"
+  exit 0
+fi
+
 # Closing a terminal tab can leave its session running and connected. A
 # second session on the same bot would answer every message twice, so refuse
 # while the session recorded here is alive. The check on the command guards
@@ -27,7 +48,6 @@ if [[ -f $lock ]]; then
     exit 1
   fi
 fi
-mkdir -p "$folder"
 cd "$folder"
 
 # A project-scope install belongs to one folder, and enabling the plugin in a

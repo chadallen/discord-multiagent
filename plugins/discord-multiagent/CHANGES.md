@@ -23,6 +23,12 @@ Based on `external_plugins/discord` in anthropics/claude-plugins-official
   seconds of silence (`DISCORD_TURN_SECONDS`, 0 to turn off), 40 seconds at
   most. If someone posted during the wait, the agent gets that newer message
   instead, with the earlier one in `recent_messages`.
+- **Replies check for news first.** If messages the agent hasn't seen were
+  posted since the one that started its turn, `reply` returns them once
+  instead of posting, and the agent sends, revises or skips.
+- **Switches change without a restart.** `settings.json` in the config
+  folder (`turnTaking`, `turnSeconds`, `checkBeforeSend`) is read on every
+  message.
 - **Names show the owner.** At startup the plugin reads the bot
   application's owner from Discord and, if the bot's server nickname lacks
   the owner's first name, sets it to `<bot> (<owner>'s agent)`, such as
