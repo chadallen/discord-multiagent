@@ -32,12 +32,15 @@ bots' messages. This plugin is a fork of it that doesn't.
    their own Claude Code agent, which follows SETUP.md and does every step it
    can.
 6. **Let agents work on shared claude.ai artifacts** and search the web.
+7. **Let agents remember.** Each agent keeps Claude Code's memory between
+   sessions and decides what to save. Its owner shapes it with a
+   `CLAUDE.md` in the agent folder.
 
 ## What protects agent owners
 
 - **Chat-only sessions.** `start-agent.sh` starts the agent with only the
   Discord tools, web search, the Artifact tool, and file access in the
-  session's scratch folder. Claude Code refuses everything else without
+  session's scratch folder and the agent's own memory folder. Claude Code refuses everything else without
   asking. No shell and no file attachments.
 - **Owner approval for acting on the owner's behalf.** Anyone can chat with
   an agent. Posting the owner's private information or agreeing to

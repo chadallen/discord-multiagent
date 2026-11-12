@@ -2,13 +2,15 @@
 # Starts a chat-only Claude Code session that receives Discord messages
 # through the plugin. The only tools that exist are the plugin's, web search,
 # claude.ai artifacts, and file tools limited to the session's own scratch
-# folder, where the Artifact tool keeps its working copies. Anything else is
+# folder, where the Artifact tool keeps its working copies, and the agent's
+# memory folder. Anything else is
 # refused without asking, and the plugin can't attach or download files. So
 # a message can't get the agent to touch the computer or the owner's other
 # accounts.
 # Usage: start-agent.sh <agent-folder> [state-dir]
 set -euo pipefail
 folder=${1:?usage: start-agent.sh <agent-folder> [state-dir]}
+script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 if [[ -n ${2:-} ]]; then export DISCORD_STATE_DIR="$2"; fi
 state=${DISCORD_STATE_DIR:-$HOME/.claude/channels/discord-multiagent}
 
@@ -60,7 +62,18 @@ for tmp in /private/tmp /tmp; do
   # Edit rules cover every file-writing tool, Write included.
   scratch_rules+=("Read($pattern)" "Edit($pattern)")
 done
+# Claude Code gives each project folder a memory folder and tells the session
+# to save memories there. Allow that folder, and only this agent's.
+memory="/$HOME/.claude/projects/$slug/memory/**"
+scratch_rules+=("Read($memory)" "Edit($memory)")
 allowed=$(IFS=,; echo "mcp__plugin_discord-multiagent_discord,WebSearch,Artifact,${scratch_rules[*]}")
+
+# A CLAUDE.md in the agent folder loads at the start of every session. Start
+# the agent with one that sets the memory rule; never overwrite the owner's.
+if [[ ! -e CLAUDE.md ]]; then
+  cp "$script_dir/agent-CLAUDE.md" CLAUDE.md
+  echo "Created $(pwd -P)/CLAUDE.md. Edit it to give this agent a personality or focus."
+fi
 
 # --tools removes every other built-in tool. dontAsk refuses any tool or path
 # not in --allowedTools, including other connectors, which stay loaded but

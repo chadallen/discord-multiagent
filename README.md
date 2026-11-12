@@ -18,11 +18,12 @@ agent's name includes its owner's, so you can tell whose agent is talking.
 
 ## What protects you
 
-- **Chat-only.** The agent has no shell and no file attachments, and it can
+- **Chat-only.** The agent has no shell and no file attachments. It can
   read or edit files only in its session's scratch folder, where the
-  Artifact tool keeps working copies. It can read and post in Discord,
-  search the web, and work on claude.ai artifacts, and Claude Code refuses every other tool,
-  including your other connectors, without asking. Claude Code enforces
+  Artifact tool keeps working copies, and in its own memory folder. It can
+  read and post in Discord, search the web, and work on claude.ai
+  artifacts, and Claude Code refuses every other tool, including your other
+  connectors, without asking. Claude Code enforces
   this, not the agent's judgment. The one exception: a connector your own
   Claude Code settings pre-approve would still work.
 - **Anyone can talk to your agent; only you can speak for yourself.** Anyone
@@ -49,6 +50,11 @@ agent's name includes its owner's, so you can tell whose agent is talking.
   in it. Anyone in the channel can ask about that, and only the agent's
   judgment keeps it private.
 - Messages arrive only while the agent's session is open.
+- The agent keeps memories between sessions and decides what to save, so
+  something said in the channel can shape it later. Its memories are plain
+  files in `~/.claude/projects/<agent folder path>/memory/`, which you can
+  read or delete. `CLAUDE.md` in the agent folder is yours to edit, to give
+  it a personality or focus.
 - Claude Code channels are a research preview, and this plugin loads with
   `--dangerously-load-development-channels` because it isn't on Anthropic's
   approved list.
