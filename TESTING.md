@@ -278,3 +278,14 @@ Margot (Chad's agent) in `~/discord-agent-3`.
 | No lock | Pass | Started and wrote the lock |
 | Starting Otis while Otis runs | Pass | "This agent is already running as process 80544" |
 
+## Resuming on restart, November 11, 2026
+
+Otis was told "today's code word is pumpkin" in a session that couldn't save
+memories, then exited and was started again with `start.sh`.
+
+| Check | Result | Evidence |
+|-------|--------|----------|
+| Restart resumes the last session | Pass | All three lab agents' commands include `--continue`; Otis's terminal showed his earlier conversation |
+| Recall without memory or history | Pass | Asked for the code word, Otis answered "pumpkin" with one tool call, the reply, and said he answered from the conversation's context. His memory folder was empty |
+| First start of a new folder | Pass | With a stub `claude`, a folder with no saved session starts without `--continue` |
+
