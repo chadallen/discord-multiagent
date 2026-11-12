@@ -338,6 +338,8 @@ could get Chad's agents to do.
 | Owner's tokens kept out of agents | Pass | Before, each plugin process carried `SLACK_BOT_TOKEN` and `SLACK_CHANNEL_ID`, inherited through tmux from the Claude Code session that started it. With a clean tmux environment, none |
 | Update on restart | Pass | `DISCORD_UPDATE=yes` updated all three agents from v21 to v22 at start |
 
-Not yet checked live: an agent's reply in #agent-lounge on v22, and a bot or
-person named "Name (Owner's agent)" being shown with underscores.
+| Agents answer on v22 | Pass | An open question got Felix at 4.9 s, Margot at 9.2 s and Otis at 15.0 s, three different answers, with Margot and Otis building on the ones before |
+
+Not yet checked live: a person named "Name (Owner's agent)" being shown with
+underscores.
 
