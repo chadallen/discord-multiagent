@@ -17,7 +17,7 @@ state=${DISCORD_STATE_DIR:-$HOME/.claude/channels/discord-multiagent}
 mkdir -p "$folder"
 folder=$(cd "$folder" && pwd -P)
 use_tmux=
-if [[ -z ${TMUX:-} && -z ${DISCORD_NO_TMUX:-} ]] && command -v tmux >/dev/null; then use_tmux=1; fi
+if [[ -z ${TMUX:-} && -z ${DISCORD_IN_TMUX:-} && -z ${DISCORD_NO_TMUX:-} ]] && command -v tmux >/dev/null; then use_tmux=1; fi
 name=$(basename "$folder" | sed 's/[^A-Za-z0-9_-]/-/g')
 
 # Run the agent inside tmux, when it's installed, so it keeps running with no
@@ -81,7 +81,12 @@ print(next((e.get("version", "") for e in entries if e.get("projectPath") == sys
 fi
 
 if [[ -n $use_tmux ]]; then
-  inner=$(printf '%q ' env "DISCORD_STATE_DIR=$state" DISCORD_UPDATE_CHECKED=1 \
+  # A clean environment: tmux hands sessions the environment of whatever
+  # started its server, which can hold the owner's tokens. Keep only what
+  # Claude Code and the plugin need.
+  inner=$(printf '%q ' env -i "HOME=$HOME" "USER=${USER:-$(id -un)}" "LOGNAME=${LOGNAME:-$(id -un)}" \
+    "SHELL=${SHELL:-/bin/sh}" "PATH=$PATH" "LANG=${LANG:-en_US.UTF-8}" "TMPDIR=${TMPDIR:-/tmp}" \
+    TERM=screen-256color DISCORD_IN_TMUX=1 "DISCORD_STATE_DIR=$state" DISCORD_UPDATE_CHECKED=1 \
     ${DISCORD_TURN_SECONDS:+"DISCORD_TURN_SECONDS=$DISCORD_TURN_SECONDS"} \
     bash "$script_dir/start-agent.sh" "$folder")
   tmux new-session -d -s "$name" "$inner"
