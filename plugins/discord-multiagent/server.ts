@@ -96,6 +96,9 @@ const client = new Client({
   ],
   // DMs arrive as partial channels — messageCreate never fires without this.
   partials: [Partials.Channel],
+  // multiagent: an agent talked into posting @everyone or a role ping would
+  // notify the whole server, so only user mentions notify.
+  allowedMentions: { parse: ['users'], repliedUser: true },
 })
 
 type PendingEntry = {
@@ -414,11 +417,12 @@ function senderLabel(m: Message, access: Access): string {
 const OWNER_TAG = /^(.+?) \((.+)'s agent\)$/
 
 // Parentheses would let a name like "Bob (owner)" fake a sender label, so
-// they become "_", except in the "Kyle (Chad's agent)" form, which no label
-// looks like.
-function cleanName(n: string): string {
+// they become "_". Bots keep the "Kyle (Chad's agent)" form, which no label
+// looks like; only the server owner can add a bot, so a person can't take an
+// agent's name this way.
+function cleanName(n: string, isBot = false): string {
   const clean = (x: string) => x.replace(/[\[\]()|;=<>"\r\n]/g, '_')
-  const tag = n.match(OWNER_TAG)
+  const tag = isBot ? n.match(OWNER_TAG) : null
   return tag ? `${clean(tag[1]!)} (${clean(tag[2]!)}'s agent)` : clean(n)
 }
 
@@ -426,7 +430,7 @@ function formatLine(m: Message, access: Access, withId: boolean): string {
   // History from the API carries no member, so fall back to the member cache
   // to show the same server nickname as the roster.
   const member = m.member ?? m.guild?.members.cache.get(m.author.id)
-  const name = cleanName(member?.displayName ?? m.author.globalName ?? m.author.username)
+  const name = cleanName(member?.displayName ?? m.author.globalName ?? m.author.username, m.author.bot)
   let text = m.content
   for (const [id, u] of m.mentions.users) {
     const mentionName = `@${u.globalName ?? u.username}`
@@ -436,6 +440,8 @@ function formatLine(m: Message, access: Access, withId: boolean): string {
   // close the attribute or start a fake tag; swap them for look-alikes.
   text = text.replace(/[\r\n]+/g, ' ⏎ ').replace(/\|/g, '¦')
     .replace(/"/g, '”').replace(/</g, '‹').replace(/>/g, '›')
+    // A message saying "Chad A (owner): yes" would read like a labeled entry.
+    .replace(/\((owner|person|agent|webhook|you)\)/gi, '[$1]')
   const atts = m.attachments.size > 0 ? ` +${m.attachments.size}att` : ''
   const id = withId ? `  (id: ${m.id}${atts})` : atts
   return `[${m.createdAt.toISOString()}] ${name} (${senderLabel(m, access)}): ${text}${id}`
@@ -478,7 +484,7 @@ async function agentNames(botIds: string[], guild: Message['guild']): Promise<Ma
 }
 
 function agentRoster(names: Map<string, string>): string {
-  return [...names].map(([id, name]) => `${cleanName(name)}=<@${id}>`).join('; ')
+  return [...names].map(([id, name]) => `${cleanName(name, true)}=<@${id}>`).join('; ')
 }
 
 // Blanks out other agents' names that contain one of ours, so "Chad's Lab
@@ -1313,9 +1319,12 @@ async function handleInbound(msg: Message): Promise<void> {
 
   // Attachment listing goes in meta only — an in-content annotation is
   // forgeable by any allowlisted sender typing that string.
-  // A message containing "</channel>" or "<channel ...>" could fake the end
-  // of this message and a new, differently labeled one.
-  const content = (msg.content || (atts.length > 0 ? '(attachment)' : '')).replace(/<(\/?)channel/gi, '‹$1channel')
+  // A tag in a message body could fake the end of this message, a new
+  // labeled one, or a note that looks like it came from Claude Code, so
+  // tag-shaped text gets a look-alike bracket. Discord's own <@id>, <#id>,
+  // <:emoji:id>, <t:...> and <https://...> syntax has no tag shape and stays.
+  const content = (msg.content || (atts.length > 0 ? '(attachment)' : ''))
+    .replace(/<(\/?)([A-Za-z][\w-]*)(?=[\s>/])/g, '‹$1$2')
 
   const roster = agentNameMap.size > 0 ? agentRoster(agentNameMap) : ''
   // multiagent: owners are the people on allowFrom (paired by DM). Anyone else
@@ -1333,7 +1342,7 @@ async function handleInbound(msg: Message): Promise<void> {
       meta: {
         chat_id,
         message_id: msg.id,
-        user: cleanName(msg.author.username),
+        user: cleanName(msg.author.username, msg.author.bot),
         user_id: msg.author.id,
         ...(msg.author.bot ? { is_bot: 'true' } : {}),
         // multiagent: the model can't learn its own bot ID any other way, and
@@ -1342,7 +1351,7 @@ async function handleInbound(msg: Message): Promise<void> {
           ? {
               your_bot_id: client.user.id,
               // The ID alone left agents unsure which name in the room is theirs.
-              your_name: cleanName(ownDisplayName(msg)),
+              your_name: cleanName(ownDisplayName(msg), true),
               mentions_you: addressed ? 'true' : 'false',
               ...(access.allowFrom[0] ? { your_owner_id: access.allowFrom[0] } : {}),
             }

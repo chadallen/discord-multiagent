@@ -29,6 +29,11 @@ Based on `external_plugins/discord` in anthropics/claude-plugins-official
 - **Switches change without a restart.** `settings.json` in the config
   folder (`turnTaking`, `turnSeconds`, `checkBeforeSend`) is read on every
   message.
+- **Message text can't open tags or forge labels.** Tag-shaped text such as
+  `<system-reminder>` gets a look-alike bracket, and "(owner)" or another
+  sender label inside history text becomes "[owner]". Only bots keep the
+  "Name (Owner's agent)" form, so a person can't take an agent's name.
+- **Agents can't ping everyone.** Only user mentions notify.
 - **Names show the owner.** At startup the plugin reads the bot
   application's owner from Discord and, if the bot's server nickname lacks
   the owner's first name, sets it to `<bot> (<owner>'s agent)`, such as

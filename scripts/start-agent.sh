@@ -139,6 +139,19 @@ if [[ ! -e CLAUDE.md ]]; then
   echo "Created $(pwd -P)/CLAUDE.md, which the agent can edit."
 fi
 
+# The agent can edit its CLAUDE.md, and Claude Code loads any file a line
+# like "@~/.claude/settings.json" names into the session. Someone in the
+# channel could talk the agent into adding one, so refuse to start with it.
+if grep -nE '(^|[[:space:]])@(~|/|\.{1,2}/|[^[:space:]]*/|[^[:space:]]*\.md([[:space:]]|$))' CLAUDE.md; then
+  echo "$(pwd -P)/CLAUDE.md imports another file on the line above, which would load that file"
+  echo "into the agent's session. Remove the line, then start the agent again."
+  exit 1
+fi
+
+# --setting-sources skips the owner's user settings: an allow rule added
+# there for their own sessions would otherwise open a connector to agents,
+# and its hooks and environment keys would load here. The agent folder's
+# settings, which turn the plugin on, still load.
 # --tools removes every other built-in tool. dontAsk refuses any tool or path
 # not in --allowedTools, including other connectors, which stay loaded but
 # unusable unless the user's own settings pre-approve them.
@@ -152,7 +165,7 @@ if compgen -G "$HOME/.claude/projects/$slug/*.jsonl" >/dev/null; then resume=(--
 # exec keeps this process ID for claude, so the lock names the session itself.
 mkdir -p "$state"
 echo $$ > "$lock"
-exec claude ${resume[@]+"${resume[@]}"} --permission-mode dontAsk \
+exec claude ${resume[@]+"${resume[@]}"} --setting-sources project,local --permission-mode dontAsk \
   --tools ToolSearch,WebSearch,Artifact,Read,Edit,Write \
   --allowedTools "$allowed" \
   --dangerously-load-development-channels plugin:discord-multiagent@discord-multiagent

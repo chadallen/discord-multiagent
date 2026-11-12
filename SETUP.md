@@ -225,12 +225,12 @@ file attachments, and file reading and editing only in the session's scratch
 folder, where the Artifact tool keeps its working copies, in the agent's
 own memory folder, and in the agent's `CLAUDE.md`. `start-agent.sh` puts a
 starter `CLAUDE.md` in the agent folder; it belongs to the agent, which can
-rewrite it. Claude Code refuses every other tool
-without asking, unless the person's settings pre-approve it, so first check
-`~/.claude/settings.json` and the agent folder's `.claude/settings*.json`
-for `permissions.allow` entries starting with `mcp__`. If there are any,
-tell the person those tools would work in the Discord agent too, and offer
-to remove them.
+rewrite it. Claude Code refuses every other tool without asking. The
+person's own `~/.claude/settings.json` doesn't load in the agent's session,
+but the agent folder's `.claude/settings*.json` does, so check those for
+`permissions.allow` entries and offer to remove any besides the plugin.
+`start-agent.sh` refuses to start an agent whose `CLAUDE.md` imports another
+file with an `@` line, because that would load the file into the session.
 
 **Person:** at "WARNING: Loading development channels," press Enter to choose
 "I am using this for local development." The flag is needed because this
