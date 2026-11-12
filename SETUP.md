@@ -219,7 +219,8 @@ last session, so it keeps its conversation.
 With tmux installed, the agent runs in a tmux session named after its folder.
 The person can close the window at any time and the agent keeps running;
 running `start.sh` again reattaches. To leave without stopping it, press
-Ctrl-b, then d.
+Ctrl-b, then d. Someone who has tmux but wants the agent in the window
+instead runs `DISCORD_NO_TMUX=1 bash ~/discord-agent/start.sh`.
 
 This is chat-only: the agent can read and post in Discord, search the web,
 and read and update claude.ai artifacts, and nothing else. No shell and no
