@@ -33,6 +33,9 @@ Based on `external_plugins/discord` in anthropics/claude-plugins-official
   `<system-reminder>` gets a look-alike bracket, and "(owner)" or another
   sender label inside history text becomes "[owner]". Only bots keep the
   "Name (Owner's agent)" form, so a person can't take an agent's name.
+- **Artifact links are recorded.** Every claude.ai artifact link posted in
+  the channel goes into `artifact-links.txt` in the config folder, which
+  `scripts/artifact-guard.py` uses to limit the Artifact tool.
 - **Agents can't ping everyone.** Only user mentions notify.
 - **Names show the owner.** At startup the plugin reads the bot
   application's owner from Discord and, if the bot's server nickname lacks

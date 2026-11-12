@@ -36,7 +36,7 @@ import {
   type Interaction,
 } from 'discord.js'
 import { createHash, randomBytes } from 'crypto'
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, rmSync, statSync, renameSync, realpathSync, chmodSync } from 'fs'
+import { readFileSync, writeFileSync, appendFileSync, mkdirSync, readdirSync, rmSync, statSync, renameSync, realpathSync, chmodSync } from 'fs'
 import { homedir } from 'os'
 import { join, sep } from 'path'
 
@@ -1086,12 +1086,36 @@ client.on('interactionCreate', async (interaction: Interaction) => {
     .catch(() => {})
 })
 
+// multiagent: artifact links posted in the channel, by anyone including this
+// agent. scripts/artifact-guard.py lets the Artifact tool open or edit only
+// these, so a stranger can't send the agent into the owner's other artifacts.
+const ARTIFACT_LINKS_FILE = join(STATE_DIR, 'artifact-links.txt')
+const ARTIFACT_URL_RE = /https?:\/\/(?:www\.)?claude\.ai\/(?:code\/)?(?:public\/)?artifacts?\/([A-Za-z0-9_-]{8,})/g
+const knownArtifacts = new Set<string>(
+  (() => { try { return readFileSync(ARTIFACT_LINKS_FILE, 'utf8').split('\n').filter(Boolean) } catch { return [] } })(),
+)
+
+function recordArtifactLinks(text: string): void {
+  for (const m of text.matchAll(ARTIFACT_URL_RE)) {
+    const id = m[1]!.toLowerCase()
+    if (knownArtifacts.has(id)) continue
+    knownArtifacts.add(id)
+    try {
+      mkdirSync(STATE_DIR, { recursive: true, mode: 0o700 })
+      appendFileSync(ARTIFACT_LINKS_FILE, id + '\n', { mode: 0o600 })
+    } catch (err) {
+      process.stderr.write(`discord channel: could not record artifact link: ${err}\n`)
+    }
+  }
+}
+
 client.on('messageCreate', msg => {
   notePost(msg)
   // multiagent: other bots may pass gate() in guild channels; never our own
   // posts, and never bot DMs, which have no per-channel allowlist.
   if (msg.author.id === client.user?.id) {
     countOwnPost(msg)
+    recordArtifactLinks(msg.content)
     return
   }
   if (msg.author.bot && msg.channel.type === ChannelType.DM) return
@@ -1231,6 +1255,9 @@ async function handleInbound(msg: Message): Promise<void> {
   const chat_id = msg.channelId
   const access = result.access
   const isDM = msg.channel.type === ChannelType.DM
+  // Only messages that passed every check, so a stranger's pairing request
+  // can't add links.
+  recordArtifactLinks(msg.content)
 
   if (isDM) {
     dmChannelUsers.set(chat_id, msg.author.id)

@@ -162,6 +162,15 @@ fi
 # unusable unless the user's own settings pre-approve them.
 export DISCORD_ALLOW_FILES=0
 
+# A hook limits the Artifact tool, which acts as the owner's claude.ai
+# account, to artifacts linked in the channel. Passed with --settings so it
+# sits in no file the agent can edit and survives --setting-sources.
+guard_settings=$(python3 -c '
+import json, shlex, sys
+cmd = "python3 -I " + shlex.quote(sys.argv[1]) + " " + shlex.quote(sys.argv[2])
+print(json.dumps({"hooks": {"PreToolUse": [{"matcher": "Artifact", "hooks": [{"type": "command", "command": cmd}]}]}}))
+' "$script_dir/artifact-guard.py" "$state/artifact-links.txt")
+
 # Resume the agent's last session, so a restart (which every plugin update
 # needs) keeps its conversation. A first start has nothing to resume.
 resume=()
@@ -170,7 +179,7 @@ if compgen -G "$HOME/.claude/projects/$slug/*.jsonl" >/dev/null; then resume=(--
 # exec keeps this process ID for claude, so the lock names the session itself.
 mkdir -p "$state"
 echo $$ > "$lock"
-exec claude ${resume[@]+"${resume[@]}"} --setting-sources project,local --permission-mode dontAsk \
+exec claude ${resume[@]+"${resume[@]}"} --setting-sources project,local --settings "$guard_settings" --permission-mode dontAsk \
   --tools ToolSearch,WebSearch,Artifact,Read,Edit,Write \
   --allowedTools "$allowed" \
   --dangerously-load-development-channels plugin:discord-multiagent@discord-multiagent

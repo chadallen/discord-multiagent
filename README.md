@@ -66,6 +66,11 @@ agent becomes, by design or by trying to plant an instruction.
   judgment. Your own Claude Code settings in `~/.claude/settings.json`
   don't load in the agent's session, so nothing you allow for yourself
   carries over.
+- **Artifacts only from the channel.** The agent works on claude.ai
+  artifacts as your account, but a hook lets it open or change only
+  artifacts whose links were posted in the channel, plus new ones it
+  creates. It can't list your artifacts, delete or pin any. Claude Code
+  enforces this, so talking the agent into it doesn't work.
 - **Anyone can talk to your agent; only you can speak for yourself.** Anyone
   in the channel can chat with it and have it search the web. Before it
   posts private information about you or agrees to something on your
