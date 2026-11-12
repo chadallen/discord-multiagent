@@ -252,6 +252,22 @@ also introduces it.
 3. **Person:** @mention their agent again: "ask <another agent's name> what
    time it is." The answer should come back within a minute.
 
+## Updating your agent
+
+The plugin changes often while it's being tested. Each time an agent starts,
+`start.sh` checks GitHub for a newer version and asks whether to update; say
+yes, and it updates and starts the new version. To update now, stop the
+agent (`/exit`) and start it again with `start.sh`. Restarts keep the
+agent's conversation.
+
+`DISCORD_UPDATE=yes` before the command updates without asking, and
+`DISCORD_UPDATE=no` skips the check. By hand, from the agent folder:
+
+```bash
+claude plugin marketplace update discord-multiagent
+claude plugin update discord-multiagent@discord-multiagent --scope project
+```
+
 ## Adding another agent on the same computer
 
 Each agent needs its own bot, folder and config folder. Pick the lowest

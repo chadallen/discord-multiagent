@@ -14,24 +14,18 @@ script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 if [[ -n ${2:-} ]]; then export DISCORD_STATE_DIR="$2"; fi
 state=${DISCORD_STATE_DIR:-$HOME/.claude/channels/discord-multiagent}
 
+mkdir -p "$folder"
+folder=$(cd "$folder" && pwd -P)
+use_tmux=
+if [[ -z ${TMUX:-} && -z ${DISCORD_NO_TMUX:-} ]] && command -v tmux >/dev/null; then use_tmux=1; fi
+name=$(basename "$folder" | sed 's/[^A-Za-z0-9_-]/-/g')
+
 # Run the agent inside tmux, when it's installed, so it keeps running with no
 # terminal open and its owner can reattach to watch or answer it. Running this
 # again reattaches. DISCORD_NO_TMUX=1 runs it in this terminal instead.
-mkdir -p "$folder"
-folder=$(cd "$folder" && pwd -P)
-if [[ -z ${TMUX:-} && -z ${DISCORD_NO_TMUX:-} ]] && command -v tmux >/dev/null; then
-  name=$(basename "$folder" | sed 's/[^A-Za-z0-9_-]/-/g')
-  if tmux has-session -t "=$name" 2>/dev/null; then
-    if [[ -t 0 ]]; then exec tmux attach -t "=$name"; fi
-    echo "Already running in tmux session $name. Attach with: tmux attach -t $name"
-    exit 0
-  fi
-  inner=$(printf '%q ' env "DISCORD_STATE_DIR=$state" \
-    ${DISCORD_TURN_SECONDS:+"DISCORD_TURN_SECONDS=$DISCORD_TURN_SECONDS"} \
-    bash "$script_dir/start-agent.sh" "$folder")
-  tmux new-session -d -s "$name" "$inner"
+if [[ -n $use_tmux ]] && tmux has-session -t "=$name" 2>/dev/null; then
   if [[ -t 0 ]]; then exec tmux attach -t "=$name"; fi
-  echo "Started in tmux session $name. Attach with: tmux attach -t $name"
+  echo "Already running in tmux session $name. Attach with: tmux attach -t $name"
   exit 0
 fi
 
@@ -48,6 +42,54 @@ if [[ -f $lock ]]; then
     exit 1
   fi
 fi
+
+# Offer a newer plugin version before starting. The check only reads GitHub:
+# updating rewrites this script, which bash reads as it runs, so the update
+# and the restart of this script happen inside this one if-block, which bash
+# reads in full before running. DISCORD_UPDATE=yes updates without asking,
+# DISCORD_UPDATE=no skips the check; without a terminal it never asks.
+market=$HOME/.claude/plugins/marketplaces/discord-multiagent
+if [[ -z ${DISCORD_UPDATE_CHECKED:-} && ${DISCORD_UPDATE:-} != no && -d $market/.git ]]; then
+  export DISCORD_UPDATE_CHECKED=1
+  have=$(python3 -c '
+import json, os, sys
+try:
+    with open(os.path.expanduser("~/.claude/plugins/installed_plugins.json")) as f:
+        entries = json.load(f).get("plugins", {}).get("discord-multiagent@discord-multiagent", [])
+except (OSError, ValueError):
+    entries = []
+print(next((e.get("version", "") for e in entries if e.get("projectPath") == sys.argv[1]), ""))
+' "$folder")
+  latest=$( { git -C "$market" fetch -q origin 2>/dev/null &&
+    git -C "$market" show FETCH_HEAD:plugins/discord-multiagent/.claude-plugin/plugin.json 2>/dev/null |
+    python3 -c 'import json, sys; print(json.load(sys.stdin)["version"])' 2>/dev/null; } || true)
+  if [[ -n $have && -n $latest && $have != "$latest" ]]; then
+    answer=${DISCORD_UPDATE:-}
+    if [[ -z $answer && -t 0 ]]; then
+      read -r -t 60 -p "A newer Discord plugin is available ($latest; this agent has $have). Update now? [Y/n] " reply || reply=n
+      if [[ -z $reply || $reply == [Yy]* ]]; then answer=yes; fi
+    fi
+    if [[ $answer == yes ]]; then
+      echo "Updating to $latest..."
+      claude plugin marketplace update discord-multiagent >/dev/null &&
+        (cd "$folder" && claude plugin update discord-multiagent@discord-multiagent --scope project >/dev/null) &&
+        exec bash "$market/scripts/start-agent.sh" "$folder"
+      echo "The update failed. Start again to retry, or with DISCORD_UPDATE=no to skip it."
+      exit 1
+    fi
+  fi
+fi
+
+if [[ -n $use_tmux ]]; then
+  inner=$(printf '%q ' env "DISCORD_STATE_DIR=$state" DISCORD_UPDATE_CHECKED=1 \
+    ${DISCORD_TURN_SECONDS:+"DISCORD_TURN_SECONDS=$DISCORD_TURN_SECONDS"} \
+    bash "$script_dir/start-agent.sh" "$folder")
+  tmux new-session -d -s "$name" "$inner"
+  if [[ -t 0 ]]; then exec tmux attach -t "=$name"; fi
+  echo "Started in tmux session $name. Attach with: tmux attach -t $name"
+  exit 0
+fi
+
 cd "$folder"
 
 # A project-scope install belongs to one folder, and enabling the plugin in a

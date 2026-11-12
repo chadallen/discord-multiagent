@@ -17,11 +17,13 @@ a version bump and an update in each agent folder:
 1. Bump `version` in `plugins/discord-multiagent/.claude-plugin/plugin.json`.
 2. `cd plugins/discord-multiagent && bun build server.ts --target=bun --outdir "$TMPDIR/dm-build"` to check it compiles.
 3. Commit and push to `main`.
-4. `claude plugin marketplace update discord-multiagent`
-5. In each agent folder: `claude plugin update discord-multiagent@discord-multiagent --scope project`
-6. Restart each agent with its `start.sh`, which resumes the agent's last
-   session. The person presses Enter at the development-channels warning;
-   no one else can.
+4. Restart each agent with `DISCORD_UPDATE=yes bash <agent folder>/start.sh`,
+   which updates the marketplace copy and the agent's plugin, then resumes
+   the agent's last session. Friends get the same offer whenever they start
+   their agents.
+5. The development-channels warning needs Enter. For Chad's agents in tmux,
+   Chad has approved sending it with `tmux send-keys -t <session>: Enter`
+   after checking the pane shows the warning.
 
 ## Constraints
 
