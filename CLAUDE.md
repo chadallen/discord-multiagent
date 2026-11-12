@@ -19,8 +19,9 @@ a version bump and an update in each agent folder:
 3. Commit and push to `main`.
 4. `claude plugin marketplace update discord-multiagent`
 5. In each agent folder: `claude plugin update discord-multiagent@discord-multiagent --scope project`
-6. Restart each agent with `scripts/start-agent.sh`. The person presses Enter
-   at the development-channels warning; no one else can.
+6. Restart each agent with its `start.sh`, which resumes the agent's last
+   session. The person presses Enter at the development-channels warning;
+   no one else can.
 
 ## Constraints
 

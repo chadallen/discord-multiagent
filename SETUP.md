@@ -210,7 +210,8 @@ them to open a new terminal window and run:
 bash ~/discord-agent/start.sh
 ```
 
-That is also how they start it again later.
+That is also how they start it again later. A restart reopens the agent's
+last session, so it keeps its conversation.
 
 This is chat-only: the agent can read and post in Discord, search the web,
 and read and update claude.ai artifacts, and nothing else. No shell and no

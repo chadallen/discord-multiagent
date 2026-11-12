@@ -79,10 +79,16 @@ fi
 # not in --allowedTools, including other connectors, which stay loaded but
 # unusable unless the user's own settings pre-approve them.
 export DISCORD_ALLOW_FILES=0
+
+# Resume the agent's last session, so a restart (which every plugin update
+# needs) keeps its conversation. A first start has nothing to resume.
+resume=()
+if compgen -G "$HOME/.claude/projects/$slug/*.jsonl" >/dev/null; then resume=(--continue); fi
+
 # exec keeps this process ID for claude, so the lock names the session itself.
 mkdir -p "$state"
 echo $$ > "$lock"
-exec claude --permission-mode dontAsk \
+exec claude ${resume[@]+"${resume[@]}"} --permission-mode dontAsk \
   --tools ToolSearch,WebSearch,Artifact,Read,Edit,Write \
   --allowedTools "$allowed" \
   --dangerously-load-development-channels plugin:discord-multiagent@discord-multiagent
