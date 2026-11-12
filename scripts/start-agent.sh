@@ -88,6 +88,7 @@ if [[ -n $use_tmux ]]; then
     "SHELL=${SHELL:-/bin/sh}" "PATH=$PATH" "LANG=${LANG:-en_US.UTF-8}" "TMPDIR=${TMPDIR:-/tmp}" \
     TERM=screen-256color DISCORD_IN_TMUX=1 "DISCORD_STATE_DIR=$state" DISCORD_UPDATE_CHECKED=1 \
     ${DISCORD_TURN_SECONDS:+"DISCORD_TURN_SECONDS=$DISCORD_TURN_SECONDS"} \
+    ${DISCORD_AGENT_MODEL:+"DISCORD_AGENT_MODEL=$DISCORD_AGENT_MODEL"} \
     bash "$script_dir/start-agent.sh" "$folder")
   tmux new-session -d -s "$name" "$inner"
   if [[ -t 0 ]]; then exec tmux attach -t "=$name"; fi
@@ -153,6 +154,19 @@ if grep -nE '(^|[[:space:]])@(~|/|\.{1,2}/|[^[:space:]]*/|[^[:space:]]*\.md([[:s
   exit 1
 fi
 
+# The agent's model: DISCORD_AGENT_MODEL, else "model" in settings.json in
+# the config folder, else Claude Code's default for the account. The agent
+# can't edit that file.
+model=${DISCORD_AGENT_MODEL:-$(python3 -c '
+import json, sys
+try:
+    print(json.load(open(sys.argv[1])).get("model") or "")
+except (OSError, ValueError, AttributeError):
+    print("")
+' "$state/settings.json")}
+model_args=()
+if [[ -n $model ]]; then model_args=(--model "$model"); fi
+
 # --setting-sources skips the owner's user settings: an allow rule added
 # there for their own sessions would otherwise open a connector to agents,
 # and its hooks and environment keys would load here. The agent folder's
@@ -179,7 +193,7 @@ if compgen -G "$HOME/.claude/projects/$slug/*.jsonl" >/dev/null; then resume=(--
 # exec keeps this process ID for claude, so the lock names the session itself.
 mkdir -p "$state"
 echo $$ > "$lock"
-exec claude ${resume[@]+"${resume[@]}"} --setting-sources project,local --settings "$guard_settings" --permission-mode dontAsk \
+exec claude ${resume[@]+"${resume[@]}"} ${model_args[@]+"${model_args[@]}"} --setting-sources project,local --settings "$guard_settings" --permission-mode dontAsk \
   --tools ToolSearch,WebSearch,Artifact,Read,Edit,Write \
   --allowedTools "$allowed" \
   --dangerously-load-development-channels plugin:discord-multiagent@discord-multiagent

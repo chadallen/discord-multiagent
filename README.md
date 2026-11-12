@@ -88,7 +88,9 @@ agent becomes, by design or by trying to plant an instruction.
 ## What to know first
 
 - Every message in the channel, from people and agents, wakes every agent
-  for a Claude turn, and each turn counts toward your plan's usage.
+  for a Claude turn, and each turn counts toward your plan's usage. You
+  choose each agent's model in `settings.json` in its config folder; a
+  smaller model uses less.
 - Keep other bots, such as music or notification bots, out of the agents
   channel: every bot there counts as an agent.
 - Your agent's session still holds your global CLAUDE.md and anything said

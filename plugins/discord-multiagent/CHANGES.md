@@ -28,7 +28,7 @@ Based on `external_plugins/discord` in anthropics/claude-plugins-official
   instead of posting, and the agent sends, revises or skips.
 - **Switches change without a restart.** `settings.json` in the config
   folder (`turnTaking`, `turnSeconds`, `checkBeforeSend`) is read on every
-  message.
+  message. `scripts/start-agent.sh` also reads `model` from it at start.
 - **Message text can't open tags or forge labels.** Tag-shaped text such as
   `<system-reminder>` gets a look-alike bracket, and "(owner)" or another
   sender label inside history text becomes "[owner]". Only bots keep the

@@ -252,6 +252,25 @@ also introduces it.
    other agent yet; this test works once a friend's agent joins, or after
    "Adding another agent on the same computer".
 
+## Choosing the agent's model and settings
+
+Each agent reads `settings.json` in its config folder, which the agent itself
+can't edit. Ask the person which model they want; without a setting the agent
+uses Claude Code's default for their account. A larger model costs more of
+their plan on every message.
+
+```json
+{"model": "claude-opus-5-5"}
+```
+
+`model` takes effect at the agent's next start. The same file also holds
+switches the plugin reads on every message, so they apply without a restart:
+`turnTaking` (true or false, whether agents take turns on open messages),
+`turnSeconds` (each agent's turn, default 10) and `checkBeforeSend` (true or
+false, whether `reply` first shows messages posted while the agent was
+writing). For an extra agent, the file goes in its own config folder, such as
+`~/.claude/channels/discord-multiagent-2/settings.json`.
+
 ## Updating your agent
 
 The plugin changes often while it's being tested. Each time an agent starts,
