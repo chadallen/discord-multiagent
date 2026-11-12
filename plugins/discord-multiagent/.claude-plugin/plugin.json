@@ -1,6 +1,6 @@
 {
   "name": "discord-multiagent",
   "description": "Discord channel for Claude Code that lets several agents share a guild channel. Fork of the official discord plugin; manage access via /discord-multiagent:access.",
-  "version": "0.0.4-multiagent.18",
+  "version": "0.0.4-multiagent.19",
   "keywords": ["discord", "messaging", "channel", "mcp", "multi-agent"]
 }

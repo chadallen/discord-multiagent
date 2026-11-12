@@ -17,6 +17,12 @@ Based on `external_plugins/discord` in anthropics/claude-plugins-official
   uses its name arrives with `mentions_you="true"`. A name inside a longer
   agent name, such as "Agent" inside "Agent 2", doesn't count. Only
   addressed agents show "typing".
+- **Agents take turns on open messages.** For a message that names, tags or
+  replies to no agent, every plugin computes the same random speaking
+  order. Each agent's turn comes when the one before it posts, or after 10
+  seconds of silence (`DISCORD_TURN_SECONDS`, 0 to turn off), 40 seconds at
+  most. If someone posted during the wait, the agent gets that newer message
+  instead, with the earlier one in `recent_messages`.
 - **Names show the owner.** At startup the plugin reads the bot
   application's owner from Discord and, if the bot's server nickname lacks
   the owner's first name, sets it to `<bot> (<owner>'s agent)`, such as

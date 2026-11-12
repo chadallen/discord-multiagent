@@ -35,7 +35,7 @@ import {
   type Attachment,
   type Interaction,
 } from 'discord.js'
-import { randomBytes } from 'crypto'
+import { createHash, randomBytes } from 'crypto'
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, rmSync, statSync, renameSync, realpathSync, chmodSync } from 'fs'
 import { homedir } from 'os'
 import { join, sep } from 'path'
@@ -1055,6 +1055,7 @@ client.on('interactionCreate', async (interaction: Interaction) => {
 })
 
 client.on('messageCreate', msg => {
+  notePost(msg)
   // multiagent: other bots may pass gate() in guild channels; never our own
   // posts, and never bot DMs, which have no per-channel allowlist.
   if (msg.author.id === client.user?.id) {
@@ -1064,6 +1065,81 @@ client.on('messageCreate', msg => {
   if (msg.author.bot && msg.channel.type === ChannelType.DM) return
   handleInbound(msg).catch(e => process.stderr.write(`discord: handleInbound failed: ${e}\n`))
 })
+
+// multiagent: turn-taking on open messages. Every agent's plugin computes the
+// same random order for a message from its ID and the agents' bot IDs, so
+// they agree without talking to each other. Each agent's turn comes when the
+// one before it has posted, or after TURN_MS if that one stays silent. If
+// someone posted meanwhile, the agent gets that newer message instead, with
+// this one in its recent_messages, so it reacts to what was said.
+const turnEnv = Number(process.env.DISCORD_TURN_SECONDS)
+const TURN_MS = (Number.isFinite(turnEnv) && turnEnv >= 0 ? turnEnv : 10) * 1000
+// Agents that posted recently but went offline still hold a place in the
+// order; this caps how long they can hold up the rest.
+const TURN_MAX_WAIT_MS = 40_000
+
+const lastBotPost = new Map<string, bigint>()
+const postWaiters = new Set<() => void>()
+
+function notePost(msg: Message): void {
+  if (!msg.author.bot) return
+  const key = `${msg.channelId}:${msg.author.id}`
+  const id = BigInt(msg.id)
+  if ((lastBotPost.get(key) ?? 0n) < id) lastBotPost.set(key, id)
+  for (const wake of [...postWaiters]) wake()
+}
+
+function postedSince(channelId: string, botId: string, after: bigint): boolean {
+  return (lastBotPost.get(`${channelId}:${botId}`) ?? 0n) > after
+}
+
+function waitForPost(channelId: string, botId: string, after: bigint, ms: number): Promise<void> {
+  return new Promise(resolve => {
+    if (postedSince(channelId, botId, after)) return resolve()
+    const done = () => { clearTimeout(timer); postWaiters.delete(wake); resolve() }
+    const wake = () => { if (postedSince(channelId, botId, after)) done() }
+    const timer = setTimeout(done, ms)
+    postWaiters.add(wake)
+  })
+}
+
+function turnOrder(messageId: string, botIds: string[]): string[] {
+  const rank = (id: string) => createHash('sha256').update(`${messageId}:${id}`).digest('hex')
+  return [...botIds].sort((a, b) => (rank(a) < rank(b) ? -1 : rank(a) > rank(b) ? 1 : 0))
+}
+
+// Returns whether this agent had to wait, i.e. wasn't first.
+async function waitForTurn(msg: Message, botIds: string[]): Promise<boolean> {
+  const me = client.user?.id
+  if (!me) return false
+  const order = turnOrder(msg.id, [...new Set([...botIds, me])].filter(id => id !== msg.author.id))
+  const ahead = order.slice(0, order.indexOf(me))
+  if (ahead.length === 0) return false
+  const after = BigInt(msg.id)
+  const deadline = Date.now() + TURN_MAX_WAIT_MS
+  for (const id of ahead) {
+    const left = deadline - Date.now()
+    if (left <= 0) break
+    await waitForPost(msg.channelId, id, after, Math.min(TURN_MS, left))
+  }
+  return true
+}
+
+// A message is open when it names, tags or replies to no agent. A bot only
+// addresses an agent by tag or reply, as elsewhere.
+function addressesAnAgent(msg: Message, names: string[]): boolean {
+  if (msg.mentions.users.some(u => u.bot)) return true
+  if (msg.mentions.repliedUser?.bot) return true
+  if (msg.author.bot) return false
+  const all = names
+    .flatMap(n => [n, n.match(OWNER_TAG)?.[1]])
+    .filter((n): n is string => !!n && n.length >= 2)
+  return all.some(n => new RegExp(`(^|\\W)${n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\W|$)`, 'i').test(msg.content))
+}
+
+// Open messages reach the session in the order they were posted, so a reply
+// can't arrive before the message it answers.
+const deliveryChain = new Map<string, Promise<void>>()
 
 async function handleInbound(msg: Message): Promise<void> {
   const result = await gate(msg)
@@ -1127,6 +1203,31 @@ async function handleInbound(msg: Message): Promise<void> {
   // So a later message doesn't also carry this one in its recent_messages.
   noteDelivered(msg.id)
 
+  const isOpen = !isDM && !addressed && !!group && TURN_MS > 0 &&
+    !addressesAnAgent(msg, [...agentNameMap.values()])
+  let release = () => {}
+  if (isOpen) {
+    // If a message ahead in line fails before releasing its place, the rest
+    // of the line still moves after a time limit instead of stalling.
+    const prev = Promise.race([
+      deliveryChain.get(chat_id) ?? Promise.resolve(),
+      new Promise<void>(r => setTimeout(r, TURN_MAX_WAIT_MS + 20_000)),
+    ])
+    const mine = new Promise<void>(r => { release = r })
+    deliveryChain.set(chat_id, prev.then(() => mine))
+    await prev
+    if (await waitForTurn(msg, [...agentNameMap.keys()])) {
+      // Someone else spoke during the wait: skip this message, and the newer
+      // one, delivered next, carries it in recent_messages.
+      const later = await msg.channel.messages.fetch({ limit: 10, after: msg.id }).catch(() => null)
+      if (later && [...later.values()].some(m => m.author.id !== client.user?.id)) {
+        deliveredIds.delete(msg.id)
+        release()
+        return
+      }
+    }
+  }
+
   // Typing and ack only when addressed; otherwise every line in the room
   // would show every agent typing.
   if (addressed && 'sendTyping' in msg.channel) {
@@ -1189,7 +1290,7 @@ async function handleInbound(msg: Message): Promise<void> {
     },
   }).catch(err => {
     process.stderr.write(`discord channel: failed to deliver inbound to Claude: ${err}\n`)
-  })
+  }).finally(release)
 }
 
 client.once('ready', c => {
