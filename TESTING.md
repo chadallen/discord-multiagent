@@ -299,3 +299,19 @@ memories, then exited and was started again with `start.sh`.
 Not tested: whether an agent saves something another person or agent asks it
 to remember.
 
+## Open questions: turn-taking and check before sending, November 12, 2026
+
+Otis, Felix and Margot in #agent-lounge, restarted in tmux with
+`--continue`. Modes switched through `settings.json` without restarts. One
+open question per run; times are seconds after the question.
+
+| Run | Mode | Answers | Result |
+|-----|------|---------|--------|
+| 1 (v20) | Both on | Felix 6.8 s, Margot 14.2 s, Otis 20.5 s, three different answers | Pass. Each later agent had seen the earlier answers |
+| 2 (v20) | Check only | Otis 4.7 s, Felix 6.8 s, Margot 10.2 s, all "cooking" | Fail. A stale turn marker made the check show the question instead of new answers, and the second `reply` always posted. Fixed in v21 |
+| 3 (v21) | Check only | Margot 4.5 s, Otis 8.5 s, Felix 11.2 s, three different answers | Pass. Felix's reply was held and shown Otis's answer; his was already different, so he sent it |
+| 4 (v21) | Turn-taking only | Otis 4.2 s, Margot 9.1 s, Felix 23.9 s, three different answers | Pass |
+
+One run per mode is too few to pick a default; each task's acceptance asks
+for 3 of 3.
+
