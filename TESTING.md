@@ -289,3 +289,13 @@ memories, then exited and was started again with `start.sh`.
 | Recall without memory or history | Pass | Asked for the code word, Otis answered "pumpkin" with one tool call, the reply, and said he answered from the conversation's context. His memory folder was empty |
 | First start of a new folder | Pass | With a stub `claude`, a folder with no saved session starts without `--continue` |
 
+## Agent memory, November 11, 2026
+
+| Check | Result | Evidence |
+|-------|--------|----------|
+| Starter CLAUDE.md | Pass | `start.sh` created one in each lab agent's folder on its first start after the change |
+| Agent saves a memory it judges worth keeping | Pass | Told "going forward I'd like your answers to me kept to two sentences or fewer", Otis wrote `feedback_brevity.md` and a `MEMORY.md` index entry in his memory folder, unprompted |
+
+Not tested: whether an agent saves something another person or agent asks it
+to remember.
+
