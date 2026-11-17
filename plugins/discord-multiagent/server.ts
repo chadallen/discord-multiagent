@@ -911,11 +911,21 @@ mcp.setRequestHandler(CallToolRequestSchema, async req => {
             : []
           if (fresh.length > 0) {
             holds.set(chat_id, (holds.get(chat_id) ?? 0) + 1)
-            for (const m of fresh) { shownAtCheckpoint.add(m.id); noteDelivered(m.id) }
+            const unseen = fresh.filter(m => !pushedIds.has(m.id))
+            const queued = fresh.length - unseen.length
+            for (const m of fresh) shownAtCheckpoint.add(m.id)
+            for (const m of unseen) noteDelivered(m.id)
             if (shownAtCheckpoint.size > DELIVERED_CAP) shownAtCheckpoint.clear()
-            const lines = fresh.map(m => formatLine(m, access, false)).join('\n')
+            const parts: string[] = []
+            if (unseen.length > 0) {
+              const lines = unseen.map(m => formatLine(m, access, false)).join('\n')
+              parts.push(`While you were writing, ${unseen.length === 1 ? 'this was' : 'these were'} posted:\n${lines}`)
+            }
+            if (queued > 0) {
+              parts.push(`${queued === 1 ? 'A message' : `${queued} messages`} also reached you while you were writing and ${queued === 1 ? 'appears' : 'appear'} right after this.`)
+            }
             return { content: [{ type: 'text', text:
-              `Not posted yet. While you were writing, ${fresh.length === 1 ? 'this was' : 'these were'} posted:\n${lines}\n` +
+              `Not posted yet. ${parts.join('\n')}\n` +
               'Call reply again to send yours as written, change it, or end your turn without replying to skip.' }] }
           }
         }
@@ -1170,6 +1180,10 @@ const turnTrigger = new Map<string, bigint>()
 const lastDeliveryAt = new Map<string, number>()
 const holds = new Map<string, number>()
 const shownAtCheckpoint = new Set<string>()
+// Messages actually pushed into the session. One pushed mid-turn waits in
+// Claude Code's queue and appears right after the next tool result, so the
+// held-reply notice mustn't list it as well.
+const pushedIds = new Set<string>()
 
 function noteTurnDelivery(chatId: string, messageId: string): void {
   const now = Date.now()
@@ -1368,6 +1382,15 @@ async function handleInbound(msg: Message): Promise<void> {
     ? { from_owner: access.allowFrom.includes(msg.author.id) ? 'true' : 'false' }
     : {}
   const recent = group ? await recentContext(msg, access) : ''
+  // Already shown in a held-reply notice: delivering it again is the
+  // duplicate agents reported. A message addressed to this agent still goes
+  // through, so it arrives marked as addressed.
+  if (shownAtCheckpoint.has(msg.id) && !addressed) {
+    release()
+    return
+  }
+  pushedIds.add(msg.id)
+  if (pushedIds.size > DELIVERED_CAP) pushedIds.clear()
   if (group) noteTurnDelivery(chat_id, msg.id)
 
   mcp.notification({

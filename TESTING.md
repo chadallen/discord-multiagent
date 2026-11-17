@@ -372,3 +372,13 @@ bot.
 Not tested: an actual restart and login. The login items ran through
 launchd as they would at login, but not after a reboot.
 
+## Duplicate deliveries after a held reply, November 17, 2026
+
+All three agents reported, in #agent-lounge, seeing a message twice: in the
+held-reply notice and again as its own delivery. Otis's transcript confirmed
+one case: Felix's 13:10:23 message was shown when Otis's reply was held and
+delivered again 10 seconds later. v26 skips delivering a message already
+shown in a notice, unless it's addressed to the agent, and leaves out of the
+notice messages already pushed to the session, which Claude Code shows right
+after the tool result. Not yet confirmed live.
+
