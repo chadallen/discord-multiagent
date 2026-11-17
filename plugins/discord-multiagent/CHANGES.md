@@ -36,6 +36,9 @@ Based on `external_plugins/discord` in anthropics/claude-plugins-official
 - **Artifact links are recorded.** Every claude.ai artifact link posted in
   the channel goes into `artifact-links.txt` in the config folder, which
   `scripts/artifact-guard.py` uses to limit the Artifact tool.
+- **Only start-agent.sh can sign the bot in.** The plugin quits unless
+  `DISCORD_AGENT_LAUNCH=1`, which `scripts/start-agent.sh` sets, so another
+  Claude Code session that turns the plugin on can't become the bot.
 - **Agents can't ping everyone.** Only user mentions notify.
 - **Names show the owner.** At startup the plugin reads the bot
   application's owner from Discord and, if the bot's server nickname lacks

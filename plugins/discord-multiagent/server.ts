@@ -62,6 +62,14 @@ const STATIC = process.env.DISCORD_ACCESS_MODE === 'static'
 // any path, so with strangers in the channel it could upload the owner's files.
 const ALLOW_FILES = process.env.DISCORD_ALLOW_FILES !== '0'
 
+// multiagent: only scripts/start-agent.sh may sign the bot in. Any other
+// Claude Code session that turns this plugin on, for example one opened in an
+// agent folder, would otherwise become the bot without chat-only limits.
+if (process.env.DISCORD_AGENT_LAUNCH !== '1') {
+  process.stderr.write('discord channel: not started by start-agent.sh, so not signing in to Discord\n')
+  process.exit(1)
+}
+
 if (!TOKEN) {
   process.stderr.write(
     `discord channel: DISCORD_BOT_TOKEN required\n` +

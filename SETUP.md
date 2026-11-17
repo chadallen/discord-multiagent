@@ -271,6 +271,22 @@ false, whether `reply` first shows messages posted while the agent was
 writing). For an extra agent, the file goes in its own config folder, such as
 `~/.claude/channels/discord-multiagent-2/settings.json`.
 
+## Starting the agent automatically at login
+
+tmux keeps the agent running when its window closes or the Mac sleeps, but
+not through a restart. On macOS, a login item can start it again whenever the
+person logs in. Offer this after Step 8, and only with tmux installed:
+
+```bash
+bash ~/.claude/plugins/marketplaces/discord-multiagent/scripts/autostart.sh install ~/discord-agent
+```
+
+For an extra agent, add its config folder as the last argument. The login
+item waits for the network, starts the agent in tmux, and answers the
+development-channels warning itself, so tell the person it accepts that
+warning on their behalf at every login. It logs to `autostart.log` in the
+config folder. `autostart.sh remove <agent-folder>` takes it out.
+
 ## Updating your agent
 
 The plugin changes often while it's being tested. Each time an agent starts,

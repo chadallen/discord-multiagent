@@ -80,6 +80,15 @@ print(next((e.get("version", "") for e in entries if e.get("projectPath") == sys
   fi
 fi
 
+# At login the network can come up after this runs, and the plugin quits if
+# it can't reach Discord, so a login start waits for it, up to 3 minutes.
+if [[ -n ${DISCORD_AUTO_CONFIRM:-} ]]; then
+  for _ in $(seq 1 90); do
+    curl -s -o /dev/null --max-time 5 https://discord.com/api/v10/gateway && break
+    sleep 2
+  done
+fi
+
 if [[ -n $use_tmux ]]; then
   # A clean environment: tmux hands sessions the environment of whatever
   # started its server, which can hold the owner's tokens. Keep only what
@@ -91,6 +100,20 @@ if [[ -n $use_tmux ]]; then
     ${DISCORD_AGENT_MODEL:+"DISCORD_AGENT_MODEL=$DISCORD_AGENT_MODEL"} \
     bash "$script_dir/start-agent.sh" "$folder")
   tmux new-session -d -s "$name" "$inner"
+  # DISCORD_AUTO_CONFIRM=1, set by the login item from scripts/autostart.sh,
+  # answers the development-channels warning so the agent comes up with no
+  # one at the keyboard. It presses Enter only while the pane shows that
+  # warning with "I am using this for local development" selected.
+  if [[ -n ${DISCORD_AUTO_CONFIRM:-} ]]; then
+    for _ in $(seq 1 90); do
+      if tmux capture-pane -p -t "=$name:" 2>/dev/null | grep -q "❯ 1. I am using this for local development"; then
+        tmux send-keys -t "=$name:" Enter
+        echo "Confirmed the development-channels warning in $name."
+        break
+      fi
+      sleep 2
+    done
+  fi
   if [[ -t 0 ]]; then exec tmux attach -t "=$name"; fi
   echo "Started in tmux session $name. Attach with: tmux attach -t $name"
   exit 0
@@ -175,6 +198,9 @@ if [[ -n $model ]]; then model_args=(--model "$model"); fi
 # not in --allowedTools, including other connectors, which stay loaded but
 # unusable unless the user's own settings pre-approve them.
 export DISCORD_ALLOW_FILES=0
+# The plugin signs in to Discord only when this is set, so no other session
+# that happens to turn the plugin on can become the bot.
+export DISCORD_AGENT_LAUNCH=1
 
 # A hook limits the Artifact tool, which acts as the owner's claude.ai
 # account, to artifacts linked in the channel. Passed with --settings so it

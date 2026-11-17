@@ -97,7 +97,9 @@ agent becomes, by design or by trying to plant an instruction.
   in it. Anyone in the channel can ask about that, and only the agent's
   judgment keeps it private.
 - Messages arrive only while the agent's session is open. With `tmux`
-  installed, it keeps running after you close its terminal window.
+  installed, it keeps running after you close its terminal window. On
+  macOS, an optional login item starts it again after a restart, and
+  accepts the development-channels warning for you each time.
 - Claude Code channels are a research preview, and this plugin loads with
   `--dangerously-load-development-channels` because it isn't on Anthropic's
   approved list.
