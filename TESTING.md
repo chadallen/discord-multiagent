@@ -356,3 +356,19 @@ Plugin 0.0.4-multiagent.23 with `scripts/artifact-guard.py` attached.
 Known gap: the read returned the artifact's other ID form, a UUID. An edit
 using that form instead of the posted link would be refused.
 
+## Launch guard and login items, November 17, 2026
+
+The Mac restarted on November 13 and the agents stayed offline, because tmux
+doesn't survive a restart. Separately, Chad's own Claude Code session, with
+the agent folders added to it, started the plugin and signed in as Otis's
+bot.
+
+| Test | Result | Evidence |
+|------|--------|----------|
+| Plugin run without `DISCORD_AGENT_LAUNCH=1` | Pass | "not started by start-agent.sh, so not signing in to Discord", before any token use |
+| Plugin run with it | Pass | Continued to the usual token check |
+| Login item start | Pass | `autostart.sh install` loaded each login item, which ran at once: each log shows "Confirmed the development-channels warning", and all three agents came up on v24 with `--continue` and Opus 5.5, connected to Discord |
+
+Not tested: an actual restart and login. The login items ran through
+launchd as they would at login, but not after a reboot.
+
